@@ -60,7 +60,7 @@ python3 run.py retrieval \
     --out result/results_vllm.json
 ```
 
-### 1. Search
+### 2. Search
 
 #### OpenAI
 ```python

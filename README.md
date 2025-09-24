@@ -36,10 +36,10 @@ python3 run.py --jsonl data/isabelle_judge.jsonl
 ```
 
 ## Backend
-
+```
 --backend openai → use OpenAI API (openai_key from api_key.json)
 --backend vllm → use a local vLLM server (vllm_url from api_key.json)
-
+```
 ## Usage
 
 1. Retrieval

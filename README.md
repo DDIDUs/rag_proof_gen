@@ -42,9 +42,9 @@ python3 run.py --jsonl data/isabelle_judge.jsonl
 ```
 ## Usage
 
-1. Retrieval
+### 1. Retrieval
 
-### OpenAI
+#### OpenAI
 ```python
 python3 run.py retrieval \
     --test-jsonl test_data/lemmas_short.jsonl \
@@ -52,7 +52,7 @@ python3 run.py retrieval \
     --out result/results_openai.json
 ```
 
-### VLLM
+#### VLLM
 ```python
 python3 run.py retrieval \
     --test-jsonl test_data/lemmas_short.jsonl \
@@ -60,9 +60,9 @@ python3 run.py retrieval \
     --out result/results_vllm.json
 ```
 
-1. Search
+### 1. Search
 
-### OpenAI
+#### OpenAI
 ```python
 python3 run.py search \
     --test-jsonl test_data/lemmas_short.jsonl \
@@ -70,7 +70,7 @@ python3 run.py search \
     --out result/results_openai.json
 ```
 
-### VLLM
+#### VLLM
 ```python
 python3 run.py search \
     --test-jsonl test_data/lemmas_short.jsonl \

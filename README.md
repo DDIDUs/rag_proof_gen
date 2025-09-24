@@ -3,7 +3,7 @@
 This script provides a simple pipeline to:
 1. **Index** Isabelle/HOL lemma data (`explanation`, `snippet`) into ChromaDB.
 2. **Generate explanations** for input lemmas (using an LLM).
-3. **Retrieve/Search** similar examples via Dense, BM25, or Hybrid RAG.
+3. **Retrieve/Search** similar examples via Dense, BM25.
 4. **Save results as JSON** for evaluation or further processing.
 
 ---

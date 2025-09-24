@@ -1,0 +1,882 @@
+[
+  {
+    "case": 1,
+    "input": "lemma corres_throwError_str [corresK_concrete_rER]:\n  \"corres_underlyingK sr nf nf' (r (Inl a) (Inl b)) r \\<top> \\<top> (throwError a) (throw b)\"\n  \"corres_underlyingK sr nf nf' (r (Inl a) (Inl b)) r \\<top> \\<top> (throwError a) (throwError b)\"",
+    "gt": "by (simp add: corres_underlyingK_def)+",
+    "proof": "by (simp add: throwError_def)",
+    "prompt": "You are an Isabelle/HOL proof assistant.\nUse the given References (explanation + snippet examples) to infer tactic/style patterns.\nProduce a concise, correct proof for the Target INPUT using standard tactics.\nReturn ONLY the proof script (no extra text).\n\n# References\n### Reference 1 (source: l4v/lib/Corres_UL.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove an equivalence between the correspondence of two `throwError` actions in different monadic contexts under given state relations and result predicates.\n\nExplanation about proof:\nThe proof unfolds the definition of `throwError` using the `simp` method with the `throwError_def` simplification rule. It shows that the correspondence holds if there exist states `s` and `s'` satisfying the preconditions `P s` and `P' s'` respectively, and these states are related by `sr`, then the result relation `r` should hold for the error values wrapped in `Inl`.\n\nSNIPPET (lemma and proof):\nlemma corres_throwError[simp, corres_no_simp]:\n  \"corres_underlying sr nf nf' r P P' (throwError a) (throwError b) =\n   ((\\<exists>s s'. P s \\<and> P' s' \\<and> (s, s') \\<in> sr) \\<longrightarrow> r (Inl a) (Inl b))\"\n  by (simp add: throwError_def)\n\n### Reference 2 (source: l4v/proof/refine/ARM/Arch_R.thy):\nEXPLANATION:\n### General purpose of the collected lemmas (within 2 lines):\nThe lemma `whenE_throwError_corres_terminal` simplifies the correspondence between two monadic expressions in the context where both are expected to return successfully without errors.\n\n### Explanation about how they support later proofs:\nThis lemma supports later proofs by reducing the complexity of showing that two monadic computations, one using `whenE` and the other using `throwError`, are equivalent when both are expected to terminate successfully (`returnOk ()`). By leveraging the `corres_returnOkTT` theorem and simplifying the resulting expression, it provides a straightforward way to establish correspondence in proofs involving error handling and successful computation paths.\n\nSNIPPET (lemma and proof):\nlemmas whenE_throwError_corres_terminal =\n  whenE_throwError_corres[where m=\"returnOk ()\" and m'=\"returnOk ()\", OF _ _ corres_returnOkTT, simplified]\n\n### Reference 3 (source: l4v/lib/Corres_UL.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if certain conditions hold between two functions and their error handling mechanisms, then the corresponding monadic expressions involving conditional error throwing and subsequent operations are related under a given correspondence relation.\n\nExplanation about proof:\nThe proof unfolds the definition of `whenE` and considers two cases based on the condition `P`. If `P` holds, it simplifies the expression using assumptions `P` and `Q`, showing that the expressions are equivalent. If `P` does not hold, it uses assumption `R` to establish the correspondence between the monadic expressions involving `throwError` and the subsequent operation `m`. The assumption `Q` is used in simplifications to ensure the conditions align between the two expressions.\n\nSNIPPET (lemma and proof):\nlemma whenE_throwError_corres_initial:\n  assumes P: \"frel f f'\"\n  assumes Q: \"P = P'\"\n  assumes R: \"\\<not> P \\<Longrightarrow> corres_underlying sr nf nf' (frel \\<oplus> rvr) Q Q' m m'\"\n  shows      \"corres_underlying sr nf nf' (frel \\<oplus> rvr) Q Q'\n                     (whenE P  (throwError f ) >>=E (\\<lambda>_. m ))\n                     (whenE P' (throwError f') >>=E (\\<lambda>_. m'))\"\n  unfolding whenE_def\n  apply (cases P)\n   apply (simp add: P Q)\n  apply (simp add: Q)\n  apply (rule R)\n  apply (simp add: Q)\n  done\n\n### Reference 4 (source: l4v/lib/Monads/nondet/Nondet_More_VCG.thy):\nEXPLANATION:\nGeneral purpose of the collected lemmas (within 2 lines):\nThis lemma instantiates the `throwError_wp` theorem with a specific expression `\\<top>\\<top>` and folds in the definition `validE_R_def` to derive a specialized version tailored for reasoning about error-throwing behavior under a particular validity condition.\n\nExplanation about how they support later proofs:\nIt provides a directly applicable rewrite or elimination rule for proving properties involving `throwError` in contexts where `validE_R` holds, reducing the need to repeatedly apply `throwError_wp` and manual folding of `validE_R_def`, thus streamlining proof automation and improving readability.\n\nSNIPPET (lemma and proof):\nlemmas throwError_validE_R = throwError_wp [where E=\"\\<top>\\<top>\", folded validE_R_def]\n\n### Reference 5 (source: l4v/lib/Monads/nondet/Nondet_No_Fail.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that the `throwError` function, when called with any error `e`, does not fail under any precondition (denoted by `\\<top>`).\n\nExplanation about proof:\nThe proof is conducted using the `simp` method with the `throwError_def` added to the simplification rules. This simplification step likely reduces `throwError e` to its definition and shows that it satisfies the `no_fail` condition for any precondition `\\<top>`.\n\nSNIPPET (lemma and proof):\nlemma no_fail_throwError[wp]:\n  \"no_fail \\<top> (throwError e)\"\n  by (simp add: throwError_def)\n\n### Target:\nINPUT (lemma to prove):\nlemma corres_throwError_str [corresK_concrete_rER]:\n  \"corres_underlyingK sr nf nf' (r (Inl a) (Inl b)) r \\<top> \\<top> (throwError a) (throw b)\"\n  \"corres_underlyingK sr nf nf' (r (Inl a) (Inl b)) r \\<top> \\<top> (throwError a) (throwError b)\"\n\nREQUIRED OUTPUT:\n- ONLY the Isabelle proof script that closes this lemma.\n- Do not echo the lemma. No commentary. Proof script only.\n",
+    "explanation": "\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to establish a correspondence between the execution of two error-throwing operations in different monadic contexts, specifically showing that throwing an error in one context corresponds to throwing an error in another.\n\nExplanation about proof:\nThe proof involves demonstrating that the two operations, `throwError a` and `throw b`, are equivalent under the specified conditions of the `corres_underlyingK` relation. This is achieved by showing that both operations yield the same result when they are invoked with the same input, and that they maintain the same state properties, thus satisfying the correspondence criteria defined by the relation `r` and the state predicates `\\<top>`.\n",
+    "hits": [
+      {
+        "id": "2e3a7ca1-2d4d-4e7e-a2f0-fb236e3f4779",
+        "row_idx": 79168,
+        "document": "[type=lemma] file=l4v/lib/Corres_UL.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove an equivalence between the correspondence of two `throwError` actions in different monadic contexts under given state relations and result predicates.\n\nExplanation about proof:\nThe proof unfolds the definition of `throwError` using the `simp` method with the `throwError_def` simplification rule. It shows that the correspondence holds if there exist states `s` and `s'` satisfying the preconditions `P s` and `P' s'` respectively, and these states are related by `sr`, then the result relation `r` should hold for the error values wrapped in `Inl`.",
+        "metadata": {
+          "row_idx": 79168,
+          "score": 9.5,
+          "snippet": "lemma corres_throwError[simp, corres_no_simp]:\n  \"corres_underlying sr nf nf' r P P' (throwError a) (throwError b) =\n   ((\\<exists>s s'. P s \\<and> P' s' \\<and> (s, s') \\<in> sr) \\<longrightarrow> r (Inl a) (Inl b))\"\n  by (simp add: throwError_def)",
+          "source_file": "l4v/lib/Corres_UL.thy",
+          "type": "lemma"
+        },
+        "score": 0.7522170209406147,
+        "mode": "dense"
+      },
+      {
+        "id": "513fb06a-731b-4f61-8678-67383ea8bcfd",
+        "row_idx": 74174,
+        "document": "[type=lemmas] file=l4v/proof/refine/ARM/Arch_R.thy\n### General purpose of the collected lemmas (within 2 lines):\nThe lemma `whenE_throwError_corres_terminal` simplifies the correspondence between two monadic expressions in the context where both are expected to return successfully without errors.\n\n### Explanation about how they support later proofs:\nThis lemma supports later proofs by reducing the complexity of showing that two monadic computations, one using `whenE` and the other using `throwError`, are equivalent when both are expected to terminate successfully (`returnOk ()`). By leveraging the `corres_returnOkTT` theorem and simplifying the resulting expression, it provides a straightforward way to establish correspondence in proofs involving error handling and successful computation paths.",
+        "metadata": {
+          "row_idx": 74174,
+          "score": 8.5,
+          "snippet": "lemmas whenE_throwError_corres_terminal =\n  whenE_throwError_corres[where m=\"returnOk ()\" and m'=\"returnOk ()\", OF _ _ corres_returnOkTT, simplified]",
+          "source_file": "l4v/proof/refine/ARM/Arch_R.thy",
+          "type": "lemmas"
+        },
+        "score": 0.7063588019901405,
+        "mode": "dense"
+      },
+      {
+        "id": "b65c3eab-d81b-4a5c-a118-008f6fd0ea7f",
+        "row_idx": 63986,
+        "document": "[type=lemma] file=l4v/lib/Corres_UL.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if certain conditions hold between two functions and their error handling mechanisms, then the corresponding monadic expressions involving conditional error throwing and subsequent operations are related under a given correspondence relation.\n\nExplanation about proof:\nThe proof unfolds the definition of `whenE` and considers two cases based on the condition `P`. If `P` holds, it simplifies the expression using assumptions `P` and `Q`, showing that the expressions are equivalent. If `P` does not hold, it uses assumption `R` to establish the correspondence between the monadic expressions involving `throwError` and the subsequent operation `m`. The assumption `Q` is used in simplifications to ensure the conditions align between the two expressions.",
+        "metadata": {
+          "row_idx": 63986,
+          "score": 9.5,
+          "snippet": "lemma whenE_throwError_corres_initial:\n  assumes P: \"frel f f'\"\n  assumes Q: \"P = P'\"\n  assumes R: \"\\<not> P \\<Longrightarrow> corres_underlying sr nf nf' (frel \\<oplus> rvr) Q Q' m m'\"\n  shows      \"corres_underlying sr nf nf' (frel \\<oplus> rvr) Q Q'\n                     (whenE P  (throwError f ) >>=E (\\<lambda>_. m ))\n                     (whenE P' (throwError f') >>=E (\\<lambda>_. m'))\"\n  unfolding whenE_def\n  apply (cases P)\n   apply (simp add: P Q)\n  apply (simp add: Q)\n  apply (rule R)\n  apply (simp add: Q)\n  done",
+          "source_file": "l4v/lib/Corres_UL.thy",
+          "type": "lemma"
+        },
+        "score": 0.695205053015281,
+        "mode": "dense"
+      },
+      {
+        "id": "576f4b4c-9e6c-4793-b014-eed45570959c",
+        "row_idx": 10251,
+        "document": "[type=lemmas] file=l4v/lib/Monads/nondet/Nondet_More_VCG.thy\nGeneral purpose of the collected lemmas (within 2 lines):\nThis lemma instantiates the `throwError_wp` theorem with a specific expression `\\<top>\\<top>` and folds in the definition `validE_R_def` to derive a specialized version tailored for reasoning about error-throwing behavior under a particular validity condition.\n\nExplanation about how they support later proofs:\nIt provides a directly applicable rewrite or elimination rule for proving properties involving `throwError` in contexts where `validE_R` holds, reducing the need to repeatedly apply `throwError_wp` and manual folding of `validE_R_def`, thus streamlining proof automation and improving readability.",
+        "metadata": {
+          "row_idx": 10251,
+          "score": 9.5,
+          "snippet": "lemmas throwError_validE_R = throwError_wp [where E=\"\\<top>\\<top>\", folded validE_R_def]",
+          "source_file": "l4v/lib/Monads/nondet/Nondet_More_VCG.thy",
+          "type": "lemmas"
+        },
+        "score": 0.6898197148117171,
+        "mode": "dense"
+      },
+      {
+        "id": "a4fd6d56-59dc-4a48-b2ca-d216b42a80ab",
+        "row_idx": 13162,
+        "document": "[type=lemma] file=l4v/lib/Monads/nondet/Nondet_No_Fail.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that the `throwError` function, when called with any error `e`, does not fail under any precondition (denoted by `\\<top>`).\n\nExplanation about proof:\nThe proof is conducted using the `simp` method with the `throwError_def` added to the simplification rules. This simplification step likely reduces `throwError e` to its definition and shows that it satisfies the `no_fail` condition for any precondition `\\<top>`.",
+        "metadata": {
+          "row_idx": 13162,
+          "score": 9.5,
+          "snippet": "lemma no_fail_throwError[wp]:\n  \"no_fail \\<top> (throwError e)\"\n  by (simp add: throwError_def)",
+          "source_file": "l4v/lib/Monads/nondet/Nondet_No_Fail.thy",
+          "type": "lemma"
+        },
+        "score": 0.68256261308472,
+        "mode": "dense"
+      }
+    ]
+  },
+  {
+    "case": 2,
+    "input": "lemma corresK_use_guard:\n  \"(F \\<Longrightarrow> corres_underlyingK sr nf nf' F r Q Q' f g) \\<Longrightarrow> corres_underlyingK sr nf nf' F r Q Q' f g\"",
+    "gt": "by (simp add: corres_underlyingK_def)",
+    "proof": "by (simp add: corres_underlyingK_def)",
+    "prompt": "You are an Isabelle/HOL proof assistant.\nUse the given References (explanation + snippet examples) to infer tactic/style patterns.\nProduce a concise, correct proof for the Target INPUT using standard tactics.\nReturn ONLY the proof script (no extra text).\n\n# References\n### Reference 1 (source: l4v/lib/CorresK/CorresK_Lemmas.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if a certain condition \\( F \\) implies a correspondence relation between functions \\( f \\) and \\( g \\) under specific conditions, then the correspondence relation holds regardless of whether \\( F \\) is true or not.\n\nExplanation about proof:\nThe proof uses the simplification method (`simp`) with the definition of `corres_underlyingK` to demonstrate that the antecedent and consequent of the implication are identical, thus trivially proving the lemma.\n\nSNIPPET (lemma and proof):\nlemma corresK_use_guard:\n  \"(F \\<Longrightarrow> corres_underlyingK sr nf nf' F r Q Q' f g) \\<Longrightarrow> corres_underlyingK sr nf nf' F r Q Q' f g\"\n  by (simp add: corres_underlyingK_def)\n\n### Reference 2 (source: l4v/lib/Corres_UL.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if certain conditions hold for functions `f` and `f'`, then they satisfy the `corres_underlying` relation with respect to the given sets and predicates.\n\nExplanation about proof:\nThe proof uses the assumptions provided to show that the functions `f` and `f'` meet the criteria specified in the definition of `corres_underlying`. Specifically, it leverages the `no_fail` properties of `f` and `f'` under conditions `nf` and `nf'`, respectively, and the correspondence relation `R` between their results, as well as the relationship between their input states defined by `S`. The proof simplifies the goal using the definitions of `corres_underlying` and `no_fail`.\n\nSNIPPET (lemma and proof):\nlemma corres_no_failI_base:\n  assumes f: \"nf \\<Longrightarrow> no_fail P f\"\n  assumes f': \"nf' \\<Longrightarrow> no_fail P' f'\"\n  assumes corres: \"\\<forall>(s, s') \\<in> S. P s \\<and> P' s' \\<longrightarrow>\n                     (\\<forall>(r', t') \\<in> fst (f' s'). \\<exists>(r, t) \\<in> fst (f s). (t, t') \\<in> S \\<and> R r r')\"\n  shows \"corres_underlying S nf nf' R P P' f f'\"\n  using assms by (simp add: corres_underlying_def no_fail_def)\n\n### Reference 3 (source: l4v/proof/drefine/CNode_DR.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nIf F implies that a correspondence relation holds between two computations (f () and g), then the same correspondence relation holds when the first computation is prefixed with an assertion that checks F.\n\nExplanation about proof:\nThe proof uses a case distinction on the truth value of F. If F is true, it simplifies the expression using the definition of corres_underlying, showing that the assertion does not change the correspondence. If F is false, the assertion will not execute f, and the correspondence trivially holds because the left side will not proceed to f ().\n\nSNIPPET (lemma and proof):\nlemma corres_assert_lhs:\n  \"(F \\<Longrightarrow> corres_underlying sr False False r P P' (f ()) g)\n    \\<Longrightarrow> corres_underlying sr False False r (\\<lambda>s. F \\<and> P s) P' (assert F >>= f) g\"\n  by (cases F; simp add: corres_underlying_def)\n\n### Reference 4 (source: l4v/lib/CorresK/CorresK_Lemmas.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if certain conditions hold for functions `f` and `f'` over lists `xs` and `ys`, then `mapM f xs` corresponds to `mapM f' ys` under a given correspondence relation `R`.\n\nExplanation about proof:\nThe proof begins by unfolding the definition of `corres_underlyingK`. It then applies the `impI` and `corres_mapM` rules, leveraging the assumptions provided in the lemma. The assumptions include constraints on the relationship between elements of `xs` and `ys` (`S`), correspondence properties between `f x` and `f' y` for elements in `S`, and preservation of predicates `P` and `P'` by these functions. The proof concludes by using the `auto` tactic with simplifications involving `corres_protect_def` to verify the required conditions.\n\nSNIPPET (lemma and proof):\nlemma corresK_mapM:\n  assumes S: \"set (zip xs ys) \\<subseteq> S\"\n  assumes z: \"\\<And>x y. corres_protect ((x, y) \\<in> S) \\<Longrightarrow> corres_underlyingK R nf nf' (F x y) r' P P' (f x) (f' y)\"\n  assumes w: \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P\\<rbrace> f x \\<lbrace>\\<lambda>rv. P\\<rbrace>\"\n             \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P'\\<rbrace> f' y \\<lbrace>\\<lambda>rv. P'\\<rbrace>\"\n  shows      \"corres_underlyingK R nf nf'\n                  ((length xs = length ys) \\<and>\n                   (r [] []) \\<and> (\\<forall>x xs y ys. r xs ys \\<longrightarrow> r' x y \\<longrightarrow> r (x # xs) (y # ys)) \\<and>\n                  (\\<forall>(x,y)\\<in>S. F x y)) r P P' (mapM f xs) (mapM f' ys)\"\n  unfolding corres_underlyingK_def\n  apply (rule impI, rule corres_mapM[of r r' S])\n  using assms unfolding corres_underlyingK_def by (auto simp: corres_protect_def)\n\n### Reference 5 (source: l4v/lib/Corres_UL.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if the correspondence relation `corres_underlying` holds for given parameters with the top predicate (`\\<top>`), then it trivially holds again under the same conditions.\n\nExplanation about proof:\nThe proof is done by assumption, which means that the goal is directly assumed to be true based on the premise provided. Since the statement on the left side of the implication is identical to the statement on the right side, the lemma is vacuously true.\n\nSNIPPET (lemma and proof):\nlemma corres_trivial:\n \"corres_underlying sr nf nf' r \\<top> \\<top> f g \\<Longrightarrow> corres_underlying sr nf nf' r \\<top> \\<top> f g\"\n  by assumption\n\n### Target:\nINPUT (lemma to prove):\nlemma corresK_use_guard:\n  \"(F \\<Longrightarrow> corres_underlyingK sr nf nf' F r Q Q' f g) \\<Longrightarrow> corres_underlyingK sr nf nf' F r Q Q' f g\"\n\nREQUIRED OUTPUT:\n- ONLY the Isabelle proof script that closes this lemma.\n- Do not echo the lemma. No commentary. Proof script only.\n",
+    "explanation": "\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if a certain condition \\( F \\) implies a correspondence relation \\( \\text{corres\\_underlyingK} \\), then the correspondence relation holds unconditionally.\n\nExplanation about proof:\nThe proof relies on the assumption that \\( F \\) leads to the correspondence \\( \\text{corres\\_underlyingK} \\) being true. By applying the implication, the lemma concludes that the correspondence relation holds without the condition \\( F \\), effectively demonstrating that the relation is valid in a broader context.\n",
+    "hits": [
+      {
+        "id": "5ccb83f7-1c41-429c-9a1f-2b23f2123e11",
+        "row_idx": 76914,
+        "document": "[type=lemma] file=l4v/lib/CorresK/CorresK_Lemmas.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if a certain condition \\( F \\) implies a correspondence relation between functions \\( f \\) and \\( g \\) under specific conditions, then the correspondence relation holds regardless of whether \\( F \\) is true or not.\n\nExplanation about proof:\nThe proof uses the simplification method (`simp`) with the definition of `corres_underlyingK` to demonstrate that the antecedent and consequent of the implication are identical, thus trivially proving the lemma.",
+        "metadata": {
+          "row_idx": 76914,
+          "score": 8.5,
+          "snippet": "lemma corresK_use_guard:\n  \"(F \\<Longrightarrow> corres_underlyingK sr nf nf' F r Q Q' f g) \\<Longrightarrow> corres_underlyingK sr nf nf' F r Q Q' f g\"\n  by (simp add: corres_underlyingK_def)",
+          "source_file": "l4v/lib/CorresK/CorresK_Lemmas.thy",
+          "type": "lemma"
+        },
+        "score": 0.7196665031920447,
+        "mode": "dense"
+      },
+      {
+        "id": "78d93d92-70a7-47c6-8d4a-c4c5b0b4e8b3",
+        "row_idx": 79184,
+        "document": "[type=lemma] file=l4v/lib/Corres_UL.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if certain conditions hold for functions `f` and `f'`, then they satisfy the `corres_underlying` relation with respect to the given sets and predicates.\n\nExplanation about proof:\nThe proof uses the assumptions provided to show that the functions `f` and `f'` meet the criteria specified in the definition of `corres_underlying`. Specifically, it leverages the `no_fail` properties of `f` and `f'` under conditions `nf` and `nf'`, respectively, and the correspondence relation `R` between their results, as well as the relationship between their input states defined by `S`. The proof simplifies the goal using the definitions of `corres_underlying` and `no_fail`.",
+        "metadata": {
+          "row_idx": 79184,
+          "score": 9.5,
+          "snippet": "lemma corres_no_failI_base:\n  assumes f: \"nf \\<Longrightarrow> no_fail P f\"\n  assumes f': \"nf' \\<Longrightarrow> no_fail P' f'\"\n  assumes corres: \"\\<forall>(s, s') \\<in> S. P s \\<and> P' s' \\<longrightarrow>\n                     (\\<forall>(r', t') \\<in> fst (f' s'). \\<exists>(r, t) \\<in> fst (f s). (t, t') \\<in> S \\<and> R r r')\"\n  shows \"corres_underlying S nf nf' R P P' f f'\"\n  using assms by (simp add: corres_underlying_def no_fail_def)",
+          "source_file": "l4v/lib/Corres_UL.thy",
+          "type": "lemma"
+        },
+        "score": 0.6561225630710568,
+        "mode": "dense"
+      },
+      {
+        "id": "b9c9c209-e4c9-4a9a-9e0c-c0bb40d556fb",
+        "row_idx": 40408,
+        "document": "[type=lemma] file=l4v/proof/drefine/CNode_DR.thy\nGoal that the lemma aims to prove (within 2 lines):\nIf F implies that a correspondence relation holds between two computations (f () and g), then the same correspondence relation holds when the first computation is prefixed with an assertion that checks F.\n\nExplanation about proof:\nThe proof uses a case distinction on the truth value of F. If F is true, it simplifies the expression using the definition of corres_underlying, showing that the assertion does not change the correspondence. If F is false, the assertion will not execute f, and the correspondence trivially holds because the left side will not proceed to f ().",
+        "metadata": {
+          "row_idx": 40408,
+          "score": 8.5,
+          "snippet": "lemma corres_assert_lhs:\n  \"(F \\<Longrightarrow> corres_underlying sr False False r P P' (f ()) g)\n    \\<Longrightarrow> corres_underlying sr False False r (\\<lambda>s. F \\<and> P s) P' (assert F >>= f) g\"\n  by (cases F; simp add: corres_underlying_def)",
+          "source_file": "l4v/proof/drefine/CNode_DR.thy",
+          "type": "lemma"
+        },
+        "score": 0.6481547973229779,
+        "mode": "dense"
+      },
+      {
+        "id": "4234c403-10ac-4e41-86f3-316da331ab29",
+        "row_idx": 76970,
+        "document": "[type=lemma] file=l4v/lib/CorresK/CorresK_Lemmas.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if certain conditions hold for functions `f` and `f'` over lists `xs` and `ys`, then `mapM f xs` corresponds to `mapM f' ys` under a given correspondence relation `R`.\n\nExplanation about proof:\nThe proof begins by unfolding the definition of `corres_underlyingK`. It then applies the `impI` and `corres_mapM` rules, leveraging the assumptions provided in the lemma. The assumptions include constraints on the relationship between elements of `xs` and `ys` (`S`), correspondence properties between `f x` and `f' y` for elements in `S`, and preservation of predicates `P` and `P'` by these functions. The proof concludes by using the `auto` tactic with simplifications involving `corres_protect_def` to verify the required conditions.",
+        "metadata": {
+          "row_idx": 76970,
+          "score": 8.5,
+          "snippet": "lemma corresK_mapM:\n  assumes S: \"set (zip xs ys) \\<subseteq> S\"\n  assumes z: \"\\<And>x y. corres_protect ((x, y) \\<in> S) \\<Longrightarrow> corres_underlyingK R nf nf' (F x y) r' P P' (f x) (f' y)\"\n  assumes w: \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P\\<rbrace> f x \\<lbrace>\\<lambda>rv. P\\<rbrace>\"\n             \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P'\\<rbrace> f' y \\<lbrace>\\<lambda>rv. P'\\<rbrace>\"\n  shows      \"corres_underlyingK R nf nf'\n                  ((length xs = length ys) \\<and>\n                   (r [] []) \\<and> (\\<forall>x xs y ys. r xs ys \\<longrightarrow> r' x y \\<longrightarrow> r (x # xs) (y # ys)) \\<and>\n                  (\\<forall>(x,y)\\<in>S. F x y)) r P P' (mapM f xs) (mapM f' ys)\"\n  unfolding corres_underlyingK_def\n  apply (rule impI, rule corres_mapM[of r r' S])\n  using assms unfolding corres_underlyingK_def by (auto simp: corres_protect_def)",
+          "source_file": "l4v/lib/CorresK/CorresK_Lemmas.thy",
+          "type": "lemma"
+        },
+        "score": 0.6414999917409421,
+        "mode": "dense"
+      },
+      {
+        "id": "865e6eee-8a6d-47b7-a325-a5d49228f235",
+        "row_idx": 63147,
+        "document": "[type=lemma] file=l4v/lib/Corres_UL.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if the correspondence relation `corres_underlying` holds for given parameters with the top predicate (`\\<top>`), then it trivially holds again under the same conditions.\n\nExplanation about proof:\nThe proof is done by assumption, which means that the goal is directly assumed to be true based on the premise provided. Since the statement on the left side of the implication is identical to the statement on the right side, the lemma is vacuously true.",
+        "metadata": {
+          "row_idx": 63147,
+          "score": 8.5,
+          "snippet": "lemma corres_trivial:\n \"corres_underlying sr nf nf' r \\<top> \\<top> f g \\<Longrightarrow> corres_underlying sr nf nf' r \\<top> \\<top> f g\"\n  by assumption",
+          "source_file": "l4v/lib/Corres_UL.thy",
+          "type": "lemma"
+        },
+        "score": 0.632658268965636,
+        "mode": "dense"
+      }
+    ]
+  },
+  {
+    "case": 3,
+    "input": "lemma corresK_mapM:\n  assumes S: \"set (zip xs ys) \\<subseteq> S\"\n  assumes z: \"\\<And>x y. corres_protect ((x, y) \\<in> S) \\<Longrightarrow> corres_underlyingK R nf nf' (F x y) r' P P' (f x) (f' y)\"\n  assumes w: \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P\\<rbrace> f x \\<lbrace>\\<lambda>rv. P\\<rbrace>\"\n             \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P'\\<rbrace> f' y \\<lbrace>\\<lambda>rv. P'\\<rbrace>\"\n  shows      \"corres_underlyingK R nf nf'\n                  ((length xs = length ys) \\<and>\n                   (r [] []) \\<and> (\\<forall>x xs y ys. r xs ys \\<longrightarrow> r' x y \\<longrightarrow> r (x # xs) (y # ys)) \\<and>\n                  (\\<forall>(x,y)\\<in>S. F x y)) r P P' (mapM f xs) (mapM f' ys)\"\n  unfolding corres_underlyingK_def\n  apply (rule impI, rule corres_mapM[of r r' S])",
+    "gt": "by (auto simp: corres_protect_def)",
+    "proof": "unfolding corres_underlyingK_def\napply (rule impI, rule corres_mapM[of r r' S])\nusing assms unfolding corres_underlyingK_def by (auto simp: corres_protect_def)",
+    "prompt": "You are an Isabelle/HOL proof assistant.\nUse the given References (explanation + snippet examples) to infer tactic/style patterns.\nProduce a concise, correct proof for the Target INPUT using standard tactics.\nReturn ONLY the proof script (no extra text).\n\n# References\n### Reference 1 (source: l4v/lib/CorresK/CorresK_Lemmas.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if certain conditions hold for functions `f` and `f'` over lists `xs` and `ys`, then `mapM f xs` corresponds to `mapM f' ys` under a given correspondence relation `R`.\n\nExplanation about proof:\nThe proof begins by unfolding the definition of `corres_underlyingK`. It then applies the `impI` and `corres_mapM` rules, leveraging the assumptions provided in the lemma. The assumptions include constraints on the relationship between elements of `xs` and `ys` (`S`), correspondence properties between `f x` and `f' y` for elements in `S`, and preservation of predicates `P` and `P'` by these functions. The proof concludes by using the `auto` tactic with simplifications involving `corres_protect_def` to verify the required conditions.\n\nSNIPPET (lemma and proof):\nlemma corresK_mapM:\n  assumes S: \"set (zip xs ys) \\<subseteq> S\"\n  assumes z: \"\\<And>x y. corres_protect ((x, y) \\<in> S) \\<Longrightarrow> corres_underlyingK R nf nf' (F x y) r' P P' (f x) (f' y)\"\n  assumes w: \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P\\<rbrace> f x \\<lbrace>\\<lambda>rv. P\\<rbrace>\"\n             \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P'\\<rbrace> f' y \\<lbrace>\\<lambda>rv. P'\\<rbrace>\"\n  shows      \"corres_underlyingK R nf nf'\n                  ((length xs = length ys) \\<and>\n                   (r [] []) \\<and> (\\<forall>x xs y ys. r xs ys \\<longrightarrow> r' x y \\<longrightarrow> r (x # xs) (y # ys)) \\<and>\n                  (\\<forall>(x,y)\\<in>S. F x y)) r P P' (mapM f xs) (mapM f' ys)\"\n  unfolding corres_underlyingK_def\n  apply (rule impI, rule corres_mapM[of r r' S])\n  using assms unfolding corres_underlyingK_def by (auto simp: corres_protect_def)\n\n### Reference 2 (source: l4v/proof/crefine/X64/SR_lemmas_C.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that two `cmap_relation` expressions are equal under given assumptions about the domains of the maps and a relation between their values.\n\nExplanation about proof:\nThe proof unfolds the definition of `cmap_relation` and uses the given assumptions (`adom`, `cdom`, and `rel`) to show that if one `cmap_relation` holds, then the other must also hold, and vice versa. It applies logical equivalences and properties of sets and functions to transform and simplify the expressions, ensuring that the relations between corresponding elements in the maps are preserved under the function `f`. The proof involves detailed case analysis and the use of rules like `iffI` for bidirectional implication, `ballI` for universal quantification introduction, and specific lemmas like `Some_the` and `bspec` for handling optional values and set membership, respectively.\n\nSNIPPET (lemma and proof):\nlemma cmap_relation_cong:\n  assumes adom: \"dom am = dom am'\"\n  and     cdom: \"dom cm = dom cm'\"\n  and   rel: \"\\<And>p a a' b b'.\n  \\<lbrakk> am p = Some a; am' p = Some a'; cm (f p) = Some b; cm' (f p) = Some b' \\<rbrakk> \\<Longrightarrow> rel a b = rel' a' b'\"\n  shows \"cmap_relation am cm f rel = cmap_relation am' cm' f rel'\"\n  unfolding cmap_relation_def\n  apply (clarsimp simp: adom cdom)\n  apply (rule iffI)\n   apply simp\n   apply (erule conjE)\n   apply (drule equalityD1)\n   apply (rule ballI)\n   apply (drule (1) bspec)\n   apply (erule iffD1 [OF rel, rotated -1])\n      apply (rule Some_the, erule ssubst [OF adom])\n     apply (erule Some_the)\n    apply (rule Some_the [where f = cm])\n    apply (drule subsetD)\n     apply (erule imageI)\n    apply (simp add: cdom)\n   apply (rule Some_the [where f = cm'])\n   apply (erule subsetD)\n   apply (erule imageI)\n  \\<comment> \\<open>clag\\<close>\n   apply simp\n   apply (erule conjE)\n   apply (drule equalityD1)\n   apply (rule ballI)\n   apply (drule (1) bspec)\n   apply (erule iffD2 [OF rel, rotated -1])\n      apply (rule Some_the, erule ssubst [OF adom])\n     apply (erule Some_the)\n    apply (rule Some_the [where f = cm])\n    apply (drule subsetD)\n     apply (erule imageI)\n    apply (simp add: cdom)\n   apply (rule Some_the [where f = cm'])\n   apply (erule subsetD)\n   apply (erule imageI)\n   done\n\n### Reference 3 (source: l4v/proof/drefine/CNode_DR.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if a function `f` corresponds under the `corres_underlying` relation with respect to `mapM_x g xs`, then it also corresponds under the same relation with respect to `mapM g xs`.\n\nExplanation about proof:\nThe proof leverages the simplification of `mapM_x_mapM` and the symmetric definition of `liftM` to establish the correspondence between `mapM_x g xs` and `mapM g xs`. By using these simplifications, the lemma demonstrates that the behavior of `f` with `mapM_x g xs` can be reduced to its behavior with `mapM g xs` under the given `corres_underlying` conditions.\n\nSNIPPET (lemma and proof):\nlemma corres_mapM_to_mapM_x:\n  \"corres_underlying sr fl fl' dc P P' f (mapM_x g xs)\n     \\<Longrightarrow> corres_underlying sr fl fl' dc P P' f (mapM g xs)\"\n  by (simp add: mapM_x_mapM liftM_def[symmetric])\n\n### Reference 4 (source: l4v/lib/CorresK/CorresK_Lemmas.thy):\nEXPLANATION:\nGeneral purpose of the collected lemmas (within 2 lines):\nThese lemmas combine and simplify instances of corresK_mapM with a specific parameter r'=dc, leveraging composition and simplification to produce a specialized rewrite rule for mapM-related correspondence proofs.\n\nExplanation about how they support later proofs:\nThey enable direct application of derived correspondence properties under the fixed context r'=dc, reducing proof complexity by pre-applying transformation rules and simplifications, thus avoiding repetitive manual instantiation and simplification in subsequent verification steps.\n\nSNIPPET (lemma and proof):\nlemmas corresK_mapM_x\n  = corresK_mapM[where r'=dc,\n                 THEN corresK_mapM_mapM_x[where r'=dc],\n                 simplified]\n\n### Reference 5 (source: l4v/lib/clib/Corres_UL_C.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nTo show that if a relation r' implies another relation r, and a correspondence holds under r', then the same correspondence also holds under r.\n\nExplanation about proof:\nThe proof uses the assumption x (the original correspondence under r') and applies the introduction rule ccorresI' to construct the desired correspondence under r. It eliminates the original correspondence via ccorresE, simplifies goals using the assumption y (which relates r' to r), and uses bexI to establish existential quantification, finally unfolding unif_rrel_def to complete the proof.\n\nSNIPPET (lemma and proof):\n(* Throw stuff *)\n\nlemma ccorres_rel_imp:\n  assumes x: \"ccorres_underlying sr \\<Gamma> r' xf' r' xf' P P' hs f g\"\n  assumes y: \"\\<And>x y. r' x (xf' y) \\<Longrightarrow> r x (xf y)\"\n  shows      \"ccorres_underlying sr \\<Gamma> r xf r xf P P' hs f g\"\n  using x\n  apply -\n  apply (rule ccorresI')\n   apply (erule (5) ccorresE)\n  apply clarsimp\n  apply (erule bexI [rotated])\n  apply (simp add: y unif_rrel_def)\n  done\n\n### Target:\nINPUT (lemma to prove):\nlemma corresK_mapM:\n  assumes S: \"set (zip xs ys) \\<subseteq> S\"\n  assumes z: \"\\<And>x y. corres_protect ((x, y) \\<in> S) \\<Longrightarrow> corres_underlyingK R nf nf' (F x y) r' P P' (f x) (f' y)\"\n  assumes w: \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P\\<rbrace> f x \\<lbrace>\\<lambda>rv. P\\<rbrace>\"\n             \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P'\\<rbrace> f' y \\<lbrace>\\<lambda>rv. P'\\<rbrace>\"\n  shows      \"corres_underlyingK R nf nf'\n                  ((length xs = length ys) \\<and>\n                   (r [] []) \\<and> (\\<forall>x xs y ys. r xs ys \\<longrightarrow> r' x y \\<longrightarrow> r (x # xs) (y # ys)) \\<and>\n                  (\\<forall>(x,y)\\<in>S. F x y)) r P P' (mapM f xs) (mapM f' ys)\"\n  unfolding corres_underlyingK_def\n  apply (rule impI, rule corres_mapM[of r r' S])\n\nREQUIRED OUTPUT:\n- ONLY the Isabelle proof script that closes this lemma.\n- Do not echo the lemma. No commentary. Proof script only.\n",
+    "explanation": "\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that under certain conditions, the correspondence between two computations (mapM f and mapM f') holds, ensuring that the properties and relations defined by r and r' are preserved.\n\nExplanation about proof:\nThe proof begins by applying the rule for implication introduction (impI) and then utilizes the corres_mapM lemma, which establishes the correspondence for the mapM function under the given relations and conditions. The assumptions provided ensure that the necessary properties and relations are maintained throughout the computations, allowing the conclusion to be drawn effectively.\n",
+    "hits": [
+      {
+        "id": "4234c403-10ac-4e41-86f3-316da331ab29",
+        "row_idx": 76970,
+        "document": "[type=lemma] file=l4v/lib/CorresK/CorresK_Lemmas.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if certain conditions hold for functions `f` and `f'` over lists `xs` and `ys`, then `mapM f xs` corresponds to `mapM f' ys` under a given correspondence relation `R`.\n\nExplanation about proof:\nThe proof begins by unfolding the definition of `corres_underlyingK`. It then applies the `impI` and `corres_mapM` rules, leveraging the assumptions provided in the lemma. The assumptions include constraints on the relationship between elements of `xs` and `ys` (`S`), correspondence properties between `f x` and `f' y` for elements in `S`, and preservation of predicates `P` and `P'` by these functions. The proof concludes by using the `auto` tactic with simplifications involving `corres_protect_def` to verify the required conditions.",
+        "metadata": {
+          "row_idx": 76970,
+          "score": 8.5,
+          "snippet": "lemma corresK_mapM:\n  assumes S: \"set (zip xs ys) \\<subseteq> S\"\n  assumes z: \"\\<And>x y. corres_protect ((x, y) \\<in> S) \\<Longrightarrow> corres_underlyingK R nf nf' (F x y) r' P P' (f x) (f' y)\"\n  assumes w: \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P\\<rbrace> f x \\<lbrace>\\<lambda>rv. P\\<rbrace>\"\n             \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P'\\<rbrace> f' y \\<lbrace>\\<lambda>rv. P'\\<rbrace>\"\n  shows      \"corres_underlyingK R nf nf'\n                  ((length xs = length ys) \\<and>\n                   (r [] []) \\<and> (\\<forall>x xs y ys. r xs ys \\<longrightarrow> r' x y \\<longrightarrow> r (x # xs) (y # ys)) \\<and>\n                  (\\<forall>(x,y)\\<in>S. F x y)) r P P' (mapM f xs) (mapM f' ys)\"\n  unfolding corres_underlyingK_def\n  apply (rule impI, rule corres_mapM[of r r' S])\n  using assms unfolding corres_underlyingK_def by (auto simp: corres_protect_def)",
+          "source_file": "l4v/lib/CorresK/CorresK_Lemmas.thy",
+          "type": "lemma"
+        },
+        "score": 0.659719145796408,
+        "mode": "dense"
+      },
+      {
+        "id": "75b5b701-11c8-4fdc-a69e-31c8865ef485",
+        "row_idx": 14847,
+        "document": "[type=lemma] file=l4v/proof/crefine/X64/SR_lemmas_C.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that two `cmap_relation` expressions are equal under given assumptions about the domains of the maps and a relation between their values.\n\nExplanation about proof:\nThe proof unfolds the definition of `cmap_relation` and uses the given assumptions (`adom`, `cdom`, and `rel`) to show that if one `cmap_relation` holds, then the other must also hold, and vice versa. It applies logical equivalences and properties of sets and functions to transform and simplify the expressions, ensuring that the relations between corresponding elements in the maps are preserved under the function `f`. The proof involves detailed case analysis and the use of rules like `iffI` for bidirectional implication, `ballI` for universal quantification introduction, and specific lemmas like `Some_the` and `bspec` for handling optional values and set membership, respectively.",
+        "metadata": {
+          "row_idx": 14847,
+          "score": 9.5,
+          "snippet": "lemma cmap_relation_cong:\n  assumes adom: \"dom am = dom am'\"\n  and     cdom: \"dom cm = dom cm'\"\n  and   rel: \"\\<And>p a a' b b'.\n  \\<lbrakk> am p = Some a; am' p = Some a'; cm (f p) = Some b; cm' (f p) = Some b' \\<rbrakk> \\<Longrightarrow> rel a b = rel' a' b'\"\n  shows \"cmap_relation am cm f rel = cmap_relation am' cm' f rel'\"\n  unfolding cmap_relation_def\n  apply (clarsimp simp: adom cdom)\n  apply (rule iffI)\n   apply simp\n   apply (erule conjE)\n   apply (drule equalityD1)\n   apply (rule ballI)\n   apply (drule (1) bspec)\n   apply (erule iffD1 [OF rel, rotated -1])\n      apply (rule Some_the, erule ssubst [OF adom])\n     apply (erule Some_the)\n    apply (rule Some_the [where f = cm])\n    apply (drule subsetD)\n     apply (erule imageI)\n    apply (simp add: cdom)\n   apply (rule Some_the [where f = cm'])\n   apply (erule subsetD)\n   apply (erule imageI)\n  \\<comment> \\<open>clag\\<close>\n   apply simp\n   apply (erule conjE)\n   apply (drule equalityD1)\n   apply (rule ballI)\n   apply (drule (1) bspec)\n   apply (erule iffD2 [OF rel, rotated -1])\n      apply (rule Some_the, erule ssubst [OF adom])\n     apply (erule Some_the)\n    apply (rule Some_the [where f = cm])\n    apply (drule subsetD)\n     apply (erule imageI)\n    apply (simp add: cdom)\n   apply (rule Some_the [where f = cm'])\n   apply (erule subsetD)\n   apply (erule imageI)\n   done",
+          "source_file": "l4v/proof/crefine/X64/SR_lemmas_C.thy",
+          "type": "lemma"
+        },
+        "score": 0.6481835948184924,
+        "mode": "dense"
+      },
+      {
+        "id": "c1a7e2c3-39bc-4417-9f49-6ac6eb4b7e8d",
+        "row_idx": 4758,
+        "document": "[type=lemma] file=l4v/proof/drefine/CNode_DR.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if a function `f` corresponds under the `corres_underlying` relation with respect to `mapM_x g xs`, then it also corresponds under the same relation with respect to `mapM g xs`.\n\nExplanation about proof:\nThe proof leverages the simplification of `mapM_x_mapM` and the symmetric definition of `liftM` to establish the correspondence between `mapM_x g xs` and `mapM g xs`. By using these simplifications, the lemma demonstrates that the behavior of `f` with `mapM_x g xs` can be reduced to its behavior with `mapM g xs` under the given `corres_underlying` conditions.",
+        "metadata": {
+          "row_idx": 4758,
+          "score": 9.5,
+          "snippet": "lemma corres_mapM_to_mapM_x:\n  \"corres_underlying sr fl fl' dc P P' f (mapM_x g xs)\n     \\<Longrightarrow> corres_underlying sr fl fl' dc P P' f (mapM g xs)\"\n  by (simp add: mapM_x_mapM liftM_def[symmetric])",
+          "source_file": "l4v/proof/drefine/CNode_DR.thy",
+          "type": "lemma"
+        },
+        "score": 0.638777170001138,
+        "mode": "dense"
+      },
+      {
+        "id": "e271b116-43e1-4066-a2c5-8cffab33e4d6",
+        "row_idx": 540,
+        "document": "[type=lemmas] file=l4v/lib/CorresK/CorresK_Lemmas.thy\nGeneral purpose of the collected lemmas (within 2 lines):\nThese lemmas combine and simplify instances of corresK_mapM with a specific parameter r'=dc, leveraging composition and simplification to produce a specialized rewrite rule for mapM-related correspondence proofs.\n\nExplanation about how they support later proofs:\nThey enable direct application of derived correspondence properties under the fixed context r'=dc, reducing proof complexity by pre-applying transformation rules and simplifications, thus avoiding repetitive manual instantiation and simplification in subsequent verification steps.",
+        "metadata": {
+          "row_idx": 540,
+          "score": 9.5,
+          "snippet": "lemmas corresK_mapM_x\n  = corresK_mapM[where r'=dc,\n                 THEN corresK_mapM_mapM_x[where r'=dc],\n                 simplified]",
+          "source_file": "l4v/lib/CorresK/CorresK_Lemmas.thy",
+          "type": "lemmas"
+        },
+        "score": 0.6297658721516289,
+        "mode": "dense"
+      },
+      {
+        "id": "aa676e7f-c840-4468-b8ff-f6ca9481a030",
+        "row_idx": 42967,
+        "document": "[type=lemma] file=l4v/lib/clib/Corres_UL_C.thy\nGoal that the lemma aims to prove (within 2 lines):\nTo show that if a relation r' implies another relation r, and a correspondence holds under r', then the same correspondence also holds under r.\n\nExplanation about proof:\nThe proof uses the assumption x (the original correspondence under r') and applies the introduction rule ccorresI' to construct the desired correspondence under r. It eliminates the original correspondence via ccorresE, simplifies goals using the assumption y (which relates r' to r), and uses bexI to establish existential quantification, finally unfolding unif_rrel_def to complete the proof.",
+        "metadata": {
+          "row_idx": 42967,
+          "score": 9.5,
+          "snippet": "(* Throw stuff *)\n\nlemma ccorres_rel_imp:\n  assumes x: \"ccorres_underlying sr \\<Gamma> r' xf' r' xf' P P' hs f g\"\n  assumes y: \"\\<And>x y. r' x (xf' y) \\<Longrightarrow> r x (xf y)\"\n  shows      \"ccorres_underlying sr \\<Gamma> r xf r xf P P' hs f g\"\n  using x\n  apply -\n  apply (rule ccorresI')\n   apply (erule (5) ccorresE)\n  apply clarsimp\n  apply (erule bexI [rotated])\n  apply (simp add: y unif_rrel_def)\n  done",
+          "source_file": "l4v/lib/clib/Corres_UL_C.thy",
+          "type": "lemma"
+        },
+        "score": 0.6282252813740511,
+        "mode": "dense"
+      }
+    ]
+  },
+  {
+    "case": 4,
+    "input": "lemma F_all2_pointwise[simp]:\n  \"F_all2 (\\<lambda>x y _ _. F x y) xs ys = list_all2 F xs ys\"\n  apply (rule iffI)\n  apply (clarsimp simp: F_all2_def)\n  subgoal for F'\n  apply (rule list_all2_induct_suffixeq[where Q=F']; simp)\n  apply (drule_tac x=x in spec)\n  apply (drule_tac x=y in spec)\n  apply fastforce\n  done\n  apply (clarsimp simp:F_all2_def)\n  apply (rule_tac x=F in exI)\n  apply clarsimp\n  done\n\nlemma F_all2_list:\n   \"F xs ys \\<Longrightarrow> \\<exists>F'. (\\<forall>xs ys. (F xs ys = list_all2 F' xs ys)) \\<Longrightarrow> F_all2 (\\<lambda>_ _ xs ys. F xs ys) xs ys\"\n  apply (clarsimp simp: F_all2_def)\n  apply (rule_tac x=F' in exI)",
+    "gt": "by auto",
+    "proof": "apply (rule iffI)\napply (clarsimp simp: F_all2_def)\nsubgoal for F'\n  apply (rule list_all2_induct_suffixeq[where Q=F']; simp)\n  apply (drule_tac x=x in spec)\n  apply (drule_tac x=y in spec)\n  apply fastforce\n  done\napply (clarsimp simp: F_all2_def)\napply (rule_tac x=F in exI)\napply clarsimp\ndone",
+    "prompt": "You are an Isabelle/HOL proof assistant.\nUse the given References (explanation + snippet examples) to infer tactic/style patterns.\nProduce a concise, correct proof for the Target INPUT using standard tactics.\nReturn ONLY the proof script (no extra text).\n\n# References\n### Reference 1 (source: l4v/proof/refine/ARM_HYP/Arch_R.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nIf list_all2 f holds between a non-empty list x#xs and some list b, then b must also be non-empty.\n\nExplanation about proof:\nThe proof uses induction on b and simplification. By inducting on b, the structure of b is analyzed case by case; the base case (b = []) leads to a contradiction with list_all2 f (x#xs) [], since list_all2 requires both lists to have the same length. The inductive step automatically yields that b must be of the form y#ys, which is confirmed by simp.\n\nSNIPPET (lemma and proof):\nlemma list_all2_Cons: \"list_all2 f (x#xs) b \\<Longrightarrow> \\<exists>y ys. b = y # ys\"\n  by (induct b; simp)\n\n### Reference 2 (source: l4v/proof/crefine/RISCV64/Ipc_C.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nIf two functions f and g produce equal results for all elements in list xs, then applying mapM_x with f or g to xs yields the same result.\n\nExplanation about proof:\nThe proof proceeds by structural induction on the list xs. The base case (empty list) is handled by simplification using mapM_x_Nil, and the inductive step (non-empty list) uses mapM_x_Cons along with the assumption that f and g agree on all elements of xs, allowing the induction hypothesis to apply.\n\nSNIPPET (lemma and proof):\nlemma mapM_cong: \"\\<lbrakk> \\<forall>x. elem x xs \\<longrightarrow> f x = g x \\<rbrakk> \\<Longrightarrow> mapM_x f xs =  mapM_x g xs\"\n  by (induction xs, (simp add: mapM_x_Nil mapM_x_Cons)+)\n\n### Reference 3 (source: l4v/lib/ExtraCorres.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if two lists `xs` and `ys` are of equal length and their elements are related by a set `S`, then the monadic operations `mapME f xs` and `mapME f' ys` correspond under certain conditions.\n\nExplanation about proof:\nThe proof uses induction on the two lists `xs` and `ys` with the `list_induct2` rule. The base case handles empty lists, where it directly applies simplification rules and definitions. For the inductive step (Cons case), it assumes the correspondence holds for the tails of the lists (`as` and `bs`). It then uses the assumptions provided to establish the correspondence for the heads of the lists (`a` and `b`) and combines these results using the `corres_split` and `corres_guard_imp` rules. The proof also leverages the `wpsimp` method to simplify the verification conditions, applying the given preconditions and postconditions.\n\nSNIPPET (lemma and proof):\n(* FIXME: see comment for mapM rule. Same applies for lemma strength *)\nlemma corres_mapME:\n  assumes x: \"r [] []\"\n  assumes y: \"\\<And>x xs y ys. \\<lbrakk> r xs ys; r' x y \\<rbrakk> \\<Longrightarrow> r (x # xs) (y # ys)\"\n  assumes z: \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> corres_underlying R nf nf' (F \\<oplus> r') P P' (f x) (f' y)\"\n  assumes w: \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P\\<rbrace> f x \\<lbrace>\\<lambda>rv. P\\<rbrace>\"\n             \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P'\\<rbrace> f' y \\<lbrace>\\<lambda>rv. P'\\<rbrace>\"\n  shows      \"\\<lbrakk> length xs = length ys; set (zip xs ys) \\<subseteq> S \\<rbrakk> \\<Longrightarrow>\n                   corres_underlying R nf nf' (F \\<oplus> r) P P' (mapME f xs) (mapME f' ys)\"\nproof (induct xs ys rule: list_induct2)\n  case Nil\n  show ?case\n    by (simp add: mapME_def sequenceE_def x returnOk_def)\nnext\n  case (Cons a as b bs)\n  from Cons have P: \"(a, b) \\<in> S\"\n    by simp\n  from Cons have Q: \"corres_underlying R nf nf' (F \\<oplus> r) P P' (mapME f as) (mapME f' bs)\"\n    by simp\n  show ?case\n    apply (simp add: mapME_Cons)\n    apply (rule corres_guard_imp)\n    apply (unfold bindE_def validE_def)\n      apply (rule corres_underlying_split[OF z[OF P]])\n        apply (case_tac rv)\n         apply (clarsimp simp: throwError_def)\n        apply clarsimp\n        apply (rule corres_split[OF Q])\n          apply (rule corres_trivial)\n          apply (case_tac rv)\n           apply (clarsimp simp add: lift_def throwError_def)\n          apply (clarsimp simp add: y lift_def returnOk_def throwError_def)\n         apply (wpsimp wp: w P)+\n  done\n\n### Reference 4 (source: l4v/proof/crefine/ARM_HYP/Ipc_C.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if two functions `f` and `g` are equal for all elements in a list `xs`, then applying `mapM_x` with `f` and `g` on `xs` will yield the same result.\n\nExplanation about proof:\nThe proof is conducted using induction on the list `xs`. The base case involves an empty list (`Nil`), where both `mapM_x f Nil` and `mapM_x g Nil` are simplified to `return ()` using the `mapM_x_Nil` rule, showing equality. For the inductive step (`Cons`), assuming the property holds for a list `ys`, it is shown that `mapM_x f (x # ys)` equals `mapM_x g (x # ys)` by simplifying with `mapM_x_Cons` and leveraging the induction hypothesis along with the premise that `f x = g x` for all elements `x` in `xs`.\n\nSNIPPET (lemma and proof):\nlemma mapM_cong: \"\\<lbrakk> \\<forall>x. elem x xs \\<longrightarrow> f x = g x \\<rbrakk> \\<Longrightarrow> mapM_x f xs =  mapM_x g xs\"\n  by (induction xs, (simp add: mapM_x_Nil mapM_x_Cons)+)\n\n### Reference 5 (source: l4v/lib/CorresK/CorresK_Lemmas.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nF_all2 (\\<lambda>x y _ _. F x y) xs ys is equivalent to list_all2 F xs ys,\nwhere F_all2 is a higher-order variant of list_all2 with additional unused parameters.\n\nExplanation about proof:\nThe proof uses iffI to establish bidirectional implication, then clarsimp to simplify using the definition of F_all2. The subgoal is discharged by applying list_all2_induct_suffixeq, which performs induction on the list structure while preserving a suffix predicate Q. The induction hypothesis is strengthened by specializing the quantified function F' with arguments x and y, and fastforce is used to resolve the resulting goals by combining simplification and classical reasoning.\n\nSNIPPET (lemma and proof):\nlemma F_all2_pointwise[simp]:\n  \"F_all2 (\\<lambda>x y _ _. F x y) xs ys = list_all2 F xs ys\"\n  apply (rule iffI)\n  apply (clarsimp simp: F_all2_def)\n  subgoal for F'\n  apply (rule list_all2_induct_suffixeq[where Q=F']; simp)\n  apply (drule_tac x=x in spec)\n  apply (drule_tac x=y in spec)\n  apply fastforce\n  done\n\n### Target:\nINPUT (lemma to prove):\nlemma F_all2_pointwise[simp]:\n  \"F_all2 (\\<lambda>x y _ _. F x y) xs ys = list_all2 F xs ys\"\n  apply (rule iffI)\n  apply (clarsimp simp: F_all2_def)\n  subgoal for F'\n  apply (rule list_all2_induct_suffixeq[where Q=F']; simp)\n  apply (drule_tac x=x in spec)\n  apply (drule_tac x=y in spec)\n  apply fastforce\n  done\n  apply (clarsimp simp:F_all2_def)\n  apply (rule_tac x=F in exI)\n  apply clarsimp\n  done\n\nlemma F_all2_list:\n   \"F xs ys \\<Longrightarrow> \\<exists>F'. (\\<forall>xs ys. (F xs ys = list_all2 F' xs ys)) \\<Longrightarrow> F_all2 (\\<lambda>_ _ xs ys. F xs ys) xs ys\"\n  apply (clarsimp simp: F_all2_def)\n  apply (rule_tac x=F' in exI)\n\nREQUIRED OUTPUT:\n- ONLY the Isabelle proof script that closes this lemma.\n- Do not echo the lemma. No commentary. Proof script only.\n",
+    "explanation": "\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma establishes an equivalence between a custom function `F_all2` and the standard `list_all2` function, asserting that they yield the same results when applied to lists `xs` and `ys`.\n\nExplanation about proof:\nThe proof proceeds by demonstrating the equivalence in both directions using the `iffI` rule. It first shows that if `F_all2` holds for the function `F`, then `list_all2` also holds by employing induction on the structure of the lists. The proof utilizes the `list_all2_induct_suffixeq` lemma to handle the inductive step, ensuring that the properties of `F` are preserved. The second part of the proof shows the reverse implication by assuming `list_all2` holds and constructing an appropriate function `F'` that satisfies the required conditions. The use of `clarsimp` simplifies the expressions, leading to the conclusion that both definitions are equivalent.\n",
+    "hits": [
+      {
+        "id": "da056400-e228-4b7d-bf81-cf7f0b83dbe5",
+        "row_idx": 28254,
+        "document": "[type=lemma] file=l4v/proof/refine/ARM_HYP/Arch_R.thy\nGoal that the lemma aims to prove (within 2 lines):\nIf list_all2 f holds between a non-empty list x#xs and some list b, then b must also be non-empty.\n\nExplanation about proof:\nThe proof uses induction on b and simplification. By inducting on b, the structure of b is analyzed case by case; the base case (b = []) leads to a contradiction with list_all2 f (x#xs) [], since list_all2 requires both lists to have the same length. The inductive step automatically yields that b must be of the form y#ys, which is confirmed by simp.",
+        "metadata": {
+          "row_idx": 28254,
+          "score": 9.5,
+          "snippet": "lemma list_all2_Cons: \"list_all2 f (x#xs) b \\<Longrightarrow> \\<exists>y ys. b = y # ys\"\n  by (induct b; simp)",
+          "source_file": "l4v/proof/refine/ARM_HYP/Arch_R.thy",
+          "type": "lemma"
+        },
+        "score": 0.6997483011448185,
+        "mode": "dense"
+      },
+      {
+        "id": "2c4b7e59-411f-41bb-b271-b6705065628b",
+        "row_idx": 55528,
+        "document": "[type=lemma] file=l4v/proof/crefine/RISCV64/Ipc_C.thy\nGoal that the lemma aims to prove (within 2 lines):\nIf two functions f and g produce equal results for all elements in list xs, then applying mapM_x with f or g to xs yields the same result.\n\nExplanation about proof:\nThe proof proceeds by structural induction on the list xs. The base case (empty list) is handled by simplification using mapM_x_Nil, and the inductive step (non-empty list) uses mapM_x_Cons along with the assumption that f and g agree on all elements of xs, allowing the induction hypothesis to apply.",
+        "metadata": {
+          "row_idx": 55528,
+          "score": 9.5,
+          "snippet": "lemma mapM_cong: \"\\<lbrakk> \\<forall>x. elem x xs \\<longrightarrow> f x = g x \\<rbrakk> \\<Longrightarrow> mapM_x f xs =  mapM_x g xs\"\n  by (induction xs, (simp add: mapM_x_Nil mapM_x_Cons)+)",
+          "source_file": "l4v/proof/crefine/RISCV64/Ipc_C.thy",
+          "type": "lemma"
+        },
+        "score": 0.696004212727296,
+        "mode": "dense"
+      },
+      {
+        "id": "8bd3e2f6-5038-4ec0-9163-8c87233c83ea",
+        "row_idx": 9079,
+        "document": "[type=lemma] file=l4v/lib/ExtraCorres.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if two lists `xs` and `ys` are of equal length and their elements are related by a set `S`, then the monadic operations `mapME f xs` and `mapME f' ys` correspond under certain conditions.\n\nExplanation about proof:\nThe proof uses induction on the two lists `xs` and `ys` with the `list_induct2` rule. The base case handles empty lists, where it directly applies simplification rules and definitions. For the inductive step (Cons case), it assumes the correspondence holds for the tails of the lists (`as` and `bs`). It then uses the assumptions provided to establish the correspondence for the heads of the lists (`a` and `b`) and combines these results using the `corres_split` and `corres_guard_imp` rules. The proof also leverages the `wpsimp` method to simplify the verification conditions, applying the given preconditions and postconditions.",
+        "metadata": {
+          "row_idx": 9079,
+          "score": 8.5,
+          "snippet": "(* FIXME: see comment for mapM rule. Same applies for lemma strength *)\nlemma corres_mapME:\n  assumes x: \"r [] []\"\n  assumes y: \"\\<And>x xs y ys. \\<lbrakk> r xs ys; r' x y \\<rbrakk> \\<Longrightarrow> r (x # xs) (y # ys)\"\n  assumes z: \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> corres_underlying R nf nf' (F \\<oplus> r') P P' (f x) (f' y)\"\n  assumes w: \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P\\<rbrace> f x \\<lbrace>\\<lambda>rv. P\\<rbrace>\"\n             \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P'\\<rbrace> f' y \\<lbrace>\\<lambda>rv. P'\\<rbrace>\"\n  shows      \"\\<lbrakk> length xs = length ys; set (zip xs ys) \\<subseteq> S \\<rbrakk> \\<Longrightarrow>\n                   corres_underlying R nf nf' (F \\<oplus> r) P P' (mapME f xs) (mapME f' ys)\"\nproof (induct xs ys rule: list_induct2)\n  case Nil\n  show ?case\n    by (simp add: mapME_def sequenceE_def x returnOk_def)\nnext\n  case (Cons a as b bs)\n  from Cons have P: \"(a, b) \\<in> S\"\n    by simp\n  from Cons have Q: \"corres_underlying R nf nf' (F \\<oplus> r) P P' (mapME f as) (mapME f' bs)\"\n    by simp\n  show ?case\n    apply (simp add: mapME_Cons)\n    apply (rule corres_guard_imp)\n    apply (unfold bindE_def validE_def)\n      apply (rule corres_underlying_split[OF z[OF P]])\n        apply (case_tac rv)\n         apply (clarsimp simp: throwError_def)\n        apply clarsimp\n        apply (rule corres_split[OF Q])\n          apply (rule corres_trivial)\n          apply (case_tac rv)\n           apply (clarsimp simp add: lift_def throwError_def)\n          apply (clarsimp simp add: y lift_def returnOk_def throwError_def)\n         apply (wpsimp wp: w P)+\n  done",
+          "source_file": "l4v/lib/ExtraCorres.thy",
+          "type": "lemma"
+        },
+        "score": 0.695606688965984,
+        "mode": "dense"
+      },
+      {
+        "id": "8c9870f3-a1d6-4cad-a6d0-ea42eca67ee3",
+        "row_idx": 21933,
+        "document": "[type=lemma] file=l4v/proof/crefine/ARM_HYP/Ipc_C.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if two functions `f` and `g` are equal for all elements in a list `xs`, then applying `mapM_x` with `f` and `g` on `xs` will yield the same result.\n\nExplanation about proof:\nThe proof is conducted using induction on the list `xs`. The base case involves an empty list (`Nil`), where both `mapM_x f Nil` and `mapM_x g Nil` are simplified to `return ()` using the `mapM_x_Nil` rule, showing equality. For the inductive step (`Cons`), assuming the property holds for a list `ys`, it is shown that `mapM_x f (x # ys)` equals `mapM_x g (x # ys)` by simplifying with `mapM_x_Cons` and leveraging the induction hypothesis along with the premise that `f x = g x` for all elements `x` in `xs`.",
+        "metadata": {
+          "row_idx": 21933,
+          "score": 9.5,
+          "snippet": "lemma mapM_cong: \"\\<lbrakk> \\<forall>x. elem x xs \\<longrightarrow> f x = g x \\<rbrakk> \\<Longrightarrow> mapM_x f xs =  mapM_x g xs\"\n  by (induction xs, (simp add: mapM_x_Nil mapM_x_Cons)+)",
+          "source_file": "l4v/proof/crefine/ARM_HYP/Ipc_C.thy",
+          "type": "lemma"
+        },
+        "score": 0.6891084539522871,
+        "mode": "dense"
+      },
+      {
+        "id": "b8769a9d-1300-4f54-a34e-f2520c880d73",
+        "row_idx": 77002,
+        "document": "[type=lemma] file=l4v/lib/CorresK/CorresK_Lemmas.thy\nGoal that the lemma aims to prove (within 2 lines):\nF_all2 (\\<lambda>x y _ _. F x y) xs ys is equivalent to list_all2 F xs ys,\nwhere F_all2 is a higher-order variant of list_all2 with additional unused parameters.\n\nExplanation about proof:\nThe proof uses iffI to establish bidirectional implication, then clarsimp to simplify using the definition of F_all2. The subgoal is discharged by applying list_all2_induct_suffixeq, which performs induction on the list structure while preserving a suffix predicate Q. The induction hypothesis is strengthened by specializing the quantified function F' with arguments x and y, and fastforce is used to resolve the resulting goals by combining simplification and classical reasoning.",
+        "metadata": {
+          "row_idx": 77002,
+          "score": 9.5,
+          "snippet": "lemma F_all2_pointwise[simp]:\n  \"F_all2 (\\<lambda>x y _ _. F x y) xs ys = list_all2 F xs ys\"\n  apply (rule iffI)\n  apply (clarsimp simp: F_all2_def)\n  subgoal for F'\n  apply (rule list_all2_induct_suffixeq[where Q=F']; simp)\n  apply (drule_tac x=x in spec)\n  apply (drule_tac x=y in spec)\n  apply fastforce\n  done",
+          "source_file": "l4v/lib/CorresK/CorresK_Lemmas.thy",
+          "type": "lemma"
+        },
+        "score": 0.6872137111481386,
+        "mode": "dense"
+      }
+    ]
+  },
+  {
+    "case": 5,
+    "input": "lemma list_all2_conjD:\n  \"list_all2 (\\<lambda>x y. Q x y \\<and> P x y) xs ys \\<Longrightarrow> list_all2 Q xs ys \\<and> list_all2 P xs ys\"",
+    "gt": "by (induct rule: list_all2_induct; simp)",
+    "proof": "by (induct rule: list_all2_induct; simp)",
+    "prompt": "You are an Isabelle/HOL proof assistant.\nUse the given References (explanation + snippet examples) to infer tactic/style patterns.\nProduce a concise, correct proof for the Target INPUT using standard tactics.\nReturn ONLY the proof script (no extra text).\n\n# References\n### Reference 1 (source: l4v/lib/CorresK/CorresK_Lemmas.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nIf two binary predicates F and F' hold pointwise over lists xs and ys under F_all2, then their conjunction also holds pointwise under F_all2.\n\nExplanation about proof:\nThe proof unfolds the definition of F_all2 using clarsimp, then introduces a witness function that combines the two existing witnesses for F and F' via conjunction. It concludes by applying list_all2_conjD to extract the pointwise properties and list_all2_conj to recombine them into the desired conjunction.\n\nSNIPPET (lemma and proof):\nlemma F_all2_conjI:\n  \"F_all2 F xs ys \\<Longrightarrow> F_all2 F' xs ys \\<Longrightarrow>\n    F_all2 (\\<lambda>x y xs ys. F x y xs ys \\<and> F' x y xs ys) xs ys\"\n  apply (clarsimp simp: F_all2_def)\n  apply (rule_tac x=\"\\<lambda>x y. F'a x y \\<and> F'aa x y\" in exI)\n  by (auto dest: list_all2_conjD intro: list_all2_conj)\n\n### Reference 2 (source: l4v/sys-init/CreateObjects_SI.thy):\nEXPLANATION:\nGeneral purpose of the collected lemmas (within 2 lines):\nThis lemma derives a direct introduction rule for `list_all` over conjunctions by combining `list_all_conj`, its forward direction (`iffD1`), and the definition of predicate conjunction (`pred_conj_def`), anchored with `conjI`.\n\nExplanation about how they support later proofs:\nIt enables structured reasoning about universally quantified properties over lists when each element satisfies a conjunction of predicates, allowing users to discharge list-wide conjunctions by proving each component predicate holds for all elements without manually unfolding definitions or reapplying logical equivalences.\n\nSNIPPET (lemma and proof):\nlemmas list_all_conjI = list_all_conj[THEN iffD1,unfolded pred_conj_def,OF conjI]\n\n### Reference 3 (source: l4v/tools/autocorres/tests/examples/ListRev.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nIf two lists xs and ys are both represented by the same predicate list s p, then they must be equal.\n\nExplanation about proof:\nThe proof uses induction on xs, with p and ys as arbitrary variables, and applies auto after simplifying with the list_non_NULL rule, which likely characterizes the structure of the list predicate to ensure unique representation.\n\nSNIPPET (lemma and proof):\nlemma list_unique:\n  \"list s p xs \\<Longrightarrow> list s p ys \\<Longrightarrow> xs = ys\"\n  by (induct xs arbitrary: p ys) (auto simp add: list_non_NULL)\n\n### Reference 4 (source: l4v/sys-init/CreateObjects_SI.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that for a list `xs` and predicates `P` and `Q`, the conjunction of `list_all P xs` and `list_all Q xs` is equivalent to `list_all (P and Q) xs`.\n\nExplanation about proof:\nThe proof uses induction on the list `xs`. The base case handles the empty list, where both sides of the equation trivially hold true. For the inductive step, it assumes the statement holds for a list `ys` and proves it for `x # ys`, leveraging the definition of `list_all` and the logical conjunction `and`.\n\nSNIPPET (lemma and proof):\nlemma list_all_conj:\n  \"(list_all P xs \\<and> list_all Q xs) = list_all (P and Q) xs\"\n  by (induct xs) auto\n\n### Reference 5 (source: l4v/lib/CorresK/CorresK_Lemmas.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nIf for every pair of elements (x, y) from lists xs and ys, both Q x y and P x y hold, then it follows that for every such pair, Q x y holds and also P x y holds separately.\n\nExplanation about proof:\nThe proof uses induction on the structure of the lists xs and ys as defined by the inductive predicate list_all2. The base case is when both lists are empty, which trivially satisfies the condition. For the inductive step, it assumes the property holds for the tails of the lists and shows that if the head elements satisfy the combined condition, then they also satisfy the separate conditions Q and P. The simplification step (simp) is used to handle the logical conjunctions and implications involved in the proof.\n\nSNIPPET (lemma and proof):\nlemma list_all2_conjD:\n  \"list_all2 (\\<lambda>x y. Q x y \\<and> P x y) xs ys \\<Longrightarrow> list_all2 Q xs ys \\<and> list_all2 P xs ys\"\n  by (induct rule: list_all2_induct; simp)\n\n### Target:\nINPUT (lemma to prove):\nlemma list_all2_conjD:\n  \"list_all2 (\\<lambda>x y. Q x y \\<and> P x y) xs ys \\<Longrightarrow> list_all2 Q xs ys \\<and> list_all2 P xs ys\"\n\nREQUIRED OUTPUT:\n- ONLY the Isabelle proof script that closes this lemma.\n- Do not echo the lemma. No commentary. Proof script only.\n",
+    "explanation": "\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if a pair of lists satisfies a conjunction of predicates for all corresponding elements, then each predicate holds for those lists separately.\n\nExplanation about proof:\nThe proof proceeds by assuming that the conjunction of predicates holds for all pairs of elements from the lists. By the definition of `list_all2`, this means that for each corresponding pair of elements from the lists, both predicates must be true. Therefore, we can conclude that `list_all2 Q` and `list_all2 P` hold for the lists, as each predicate is satisfied for all corresponding pairs.\n",
+    "hits": [
+      {
+        "id": "9ef56dfb-4284-4862-9e22-1fc96327c2c9",
+        "row_idx": 77132,
+        "document": "[type=lemma] file=l4v/lib/CorresK/CorresK_Lemmas.thy\nGoal that the lemma aims to prove (within 2 lines):\nIf two binary predicates F and F' hold pointwise over lists xs and ys under F_all2, then their conjunction also holds pointwise under F_all2.\n\nExplanation about proof:\nThe proof unfolds the definition of F_all2 using clarsimp, then introduces a witness function that combines the two existing witnesses for F and F' via conjunction. It concludes by applying list_all2_conjD to extract the pointwise properties and list_all2_conj to recombine them into the desired conjunction.",
+        "metadata": {
+          "row_idx": 77132,
+          "score": 7.5,
+          "snippet": "lemma F_all2_conjI:\n  \"F_all2 F xs ys \\<Longrightarrow> F_all2 F' xs ys \\<Longrightarrow>\n    F_all2 (\\<lambda>x y xs ys. F x y xs ys \\<and> F' x y xs ys) xs ys\"\n  apply (clarsimp simp: F_all2_def)\n  apply (rule_tac x=\"\\<lambda>x y. F'a x y \\<and> F'aa x y\" in exI)\n  by (auto dest: list_all2_conjD intro: list_all2_conj)",
+          "source_file": "l4v/lib/CorresK/CorresK_Lemmas.thy",
+          "type": "lemma"
+        },
+        "score": 0.6712255028800372,
+        "mode": "dense"
+      },
+      {
+        "id": "e7d0dd9e-66d5-40b5-acf6-182178a159a4",
+        "row_idx": 81239,
+        "document": "[type=lemmas] file=l4v/sys-init/CreateObjects_SI.thy\nGeneral purpose of the collected lemmas (within 2 lines):\nThis lemma derives a direct introduction rule for `list_all` over conjunctions by combining `list_all_conj`, its forward direction (`iffD1`), and the definition of predicate conjunction (`pred_conj_def`), anchored with `conjI`.\n\nExplanation about how they support later proofs:\nIt enables structured reasoning about universally quantified properties over lists when each element satisfies a conjunction of predicates, allowing users to discharge list-wide conjunctions by proving each component predicate holds for all elements without manually unfolding definitions or reapplying logical equivalences.",
+        "metadata": {
+          "row_idx": 81239,
+          "score": 9.5,
+          "snippet": "lemmas list_all_conjI = list_all_conj[THEN iffD1,unfolded pred_conj_def,OF conjI]",
+          "source_file": "l4v/sys-init/CreateObjects_SI.thy",
+          "type": "lemmas"
+        },
+        "score": 0.668891865335864,
+        "mode": "dense"
+      },
+      {
+        "id": "88a84d1f-1695-4dec-99ee-85358554e992",
+        "row_idx": 61209,
+        "document": "[type=lemma] file=l4v/tools/autocorres/tests/examples/ListRev.thy\nGoal that the lemma aims to prove (within 2 lines):\nIf two lists xs and ys are both represented by the same predicate list s p, then they must be equal.\n\nExplanation about proof:\nThe proof uses induction on xs, with p and ys as arbitrary variables, and applies auto after simplifying with the list_non_NULL rule, which likely characterizes the structure of the list predicate to ensure unique representation.",
+        "metadata": {
+          "row_idx": 61209,
+          "score": 9.5,
+          "snippet": "lemma list_unique:\n  \"list s p xs \\<Longrightarrow> list s p ys \\<Longrightarrow> xs = ys\"\n  by (induct xs arbitrary: p ys) (auto simp add: list_non_NULL)",
+          "source_file": "l4v/tools/autocorres/tests/examples/ListRev.thy",
+          "type": "lemma"
+        },
+        "score": 0.6657089395460977,
+        "mode": "dense"
+      },
+      {
+        "id": "d0446859-e95e-4de1-81cd-6537f68c94d4",
+        "row_idx": 71868,
+        "document": "[type=lemma] file=l4v/sys-init/CreateObjects_SI.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that for a list `xs` and predicates `P` and `Q`, the conjunction of `list_all P xs` and `list_all Q xs` is equivalent to `list_all (P and Q) xs`.\n\nExplanation about proof:\nThe proof uses induction on the list `xs`. The base case handles the empty list, where both sides of the equation trivially hold true. For the inductive step, it assumes the statement holds for a list `ys` and proves it for `x # ys`, leveraging the definition of `list_all` and the logical conjunction `and`.",
+        "metadata": {
+          "row_idx": 71868,
+          "score": 9.5,
+          "snippet": "lemma list_all_conj:\n  \"(list_all P xs \\<and> list_all Q xs) = list_all (P and Q) xs\"\n  by (induct xs) auto",
+          "source_file": "l4v/sys-init/CreateObjects_SI.thy",
+          "type": "lemma"
+        },
+        "score": 0.659933649535177,
+        "mode": "dense"
+      },
+      {
+        "id": "f14e78d6-ff94-454a-b74b-313a0b64b140",
+        "row_idx": 77010,
+        "document": "[type=lemma] file=l4v/lib/CorresK/CorresK_Lemmas.thy\nGoal that the lemma aims to prove (within 2 lines):\nIf for every pair of elements (x, y) from lists xs and ys, both Q x y and P x y hold, then it follows that for every such pair, Q x y holds and also P x y holds separately.\n\nExplanation about proof:\nThe proof uses induction on the structure of the lists xs and ys as defined by the inductive predicate list_all2. The base case is when both lists are empty, which trivially satisfies the condition. For the inductive step, it assumes the property holds for the tails of the lists and shows that if the head elements satisfy the combined condition, then they also satisfy the separate conditions Q and P. The simplification step (simp) is used to handle the logical conjunctions and implications involved in the proof.",
+        "metadata": {
+          "row_idx": 77010,
+          "score": 9.5,
+          "snippet": "lemma list_all2_conjD:\n  \"list_all2 (\\<lambda>x y. Q x y \\<and> P x y) xs ys \\<Longrightarrow> list_all2 Q xs ys \\<and> list_all2 P xs ys\"\n  by (induct rule: list_all2_induct; simp)",
+          "source_file": "l4v/lib/CorresK/CorresK_Lemmas.thy",
+          "type": "lemma"
+        },
+        "score": 0.656631659547541,
+        "mode": "dense"
+      }
+    ]
+  },
+  {
+    "case": 6,
+    "input": "lemma\n  list_all2_to_list_all:\n  \"list_all2 P xs xs = list_all (\\<lambda>x. P x x) xs\"",
+    "gt": "by (induct xs;simp)",
+    "proof": "by (induct xs; simp)",
+    "prompt": "You are an Isabelle/HOL proof assistant.\nUse the given References (explanation + snippet examples) to infer tactic/style patterns.\nProduce a concise, correct proof for the Target INPUT using standard tactics.\nReturn ONLY the proof script (no extra text).\n\n# References\n### Reference 1 (source: l4v/lib/CorresK/CorresK_Lemmas.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that for a predicate P and a list xs, the statement \"list_all2 P xs xs\" is equivalent to \"list_all (\\<lambda>x. P x x) xs\".\n\nExplanation about proof:\nThe proof uses induction on the list xs. The base case, when xs is an empty list, is handled by simplification, showing both sides of the equation are true. For the inductive step, it assumes the property holds for a list ys and then proves it for the list obtained by adding an element a at the front. Simplification is used again to show the equivalence in this case.\n\nSNIPPET (lemma and proof):\nlemma\n  list_all2_to_list_all:\n  \"list_all2 P xs xs = list_all (\\<lambda>x. P x x) xs\"\n  by (induct xs;simp)\n\n### Reference 2 (source: l4v/tools/autocorres/L1Peephole.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that the function mapping an element `s` to the proposition \"s is in the set of all x such that P(x)\" is equivalent to the predicate P itself.\n\nExplanation about proof:\nThe proof uses the `simp` method, which applies a series of simplification rules to reduce the left-hand side of the equation to the right-hand side. In this case, it simplifies the expression `(\\<lambda>s. s \\<in> {x. P x})` to `P` by leveraging the definition of set comprehension and the logical equivalence between set membership and the predicate that defines the set.\n\nSNIPPET (lemma and proof):\n(*\n * The following sets of rules are used to simplify conditionals,\n * removing set notation (converting into predicate notation) and\n * generally removing logical cruft without being too aggressive in our\n * simplification.\n *)\n\nlemma in_set_to_pred [L1opt]: \"(\\<lambda>s. s \\<in> {x. P x}) = P\"\n  by simp\n\n### Reference 3 (source: l4v/tools/autocorres/tests/examples/SchorrWaite.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nIf a list `xs` satisfies the predicate `List s p xs` and for all elements `x` in `xs`, the function `s` equals the function `t` at `x`, then the list `xs` also satisfies the predicate `List t p xs`.\n\nExplanation about proof:\nThe proof uses structural induction on the list `xs`. The `arbitrary: p` clause allows the predicate `p` to be considered as an arbitrary parameter throughout the induction. The base case and the inductive step are automatically handled by the `auto` tactic, which simplifies the goals using the assumptions and the definitions involved.\n\nSNIPPET (lemma and proof):\nlemma List_eq_select [elim]: \"\\<lbrakk> List s p xs; \\<forall>x \\<in> set xs. s x = t x \\<rbrakk> \\<Longrightarrow> List t p xs\"\n  by (induct xs arbitrary: p) auto\n\n### Reference 4 (source: l4v/sys-init/CreateObjects_SI.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that for a list `xs` and predicates `P` and `Q`, the conjunction of `list_all P xs` and `list_all Q xs` is equivalent to `list_all (P and Q) xs`.\n\nExplanation about proof:\nThe proof uses induction on the list `xs`. The base case handles the empty list, where both sides of the equation trivially hold true. For the inductive step, it assumes the statement holds for a list `ys` and proves it for `x # ys`, leveraging the definition of `list_all` and the logical conjunction `and`.\n\nSNIPPET (lemma and proof):\nlemma list_all_conj:\n  \"(list_all P xs \\<and> list_all Q xs) = list_all (P and Q) xs\"\n  by (induct xs) auto\n\n### Reference 5 (source: l4v/lib/Lib.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nIf a predicate P holds for all elements of a list xs, and P implies P', then P' holds for all elements of xs.\n\nExplanation about proof:\nThe proof uses metis with the fact list_all_length, which connects list_all to the length-based universal quantification over list elements, allowing the implication from P to P' to be lifted pointwise across the entire list.\n\nSNIPPET (lemma and proof):\nlemma list_allI:\n  \"\\<lbrakk>list_all P xs; \\<And>x. P x \\<Longrightarrow> P' x\\<rbrakk> \\<Longrightarrow> list_all P' xs\"\n  by (metis list_all_length)\n\n### Target:\nINPUT (lemma to prove):\nlemma\n  list_all2_to_list_all:\n  \"list_all2 P xs xs = list_all (\\<lambda>x. P x x) xs\"\n\nREQUIRED OUTPUT:\n- ONLY the Isabelle proof script that closes this lemma.\n- Do not echo the lemma. No commentary. Proof script only.\n",
+    "explanation": "\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma states that for a predicate \\( P \\) and a list \\( xs \\), the condition that all pairs of elements in \\( xs \\) satisfy \\( P \\) when compared to themselves is equivalent to applying \\( P \\) to each element with itself.\n\nExplanation about proof:\nThe proof involves showing that the two sides of the equation are equivalent by demonstrating that if \\( list\\_all2 P xs xs \\) holds, then \\( list\\_all (\\<lambda>x. P x x) xs \\) must also hold, and vice versa. This is done by analyzing the definitions of \\( list\\_all2 \\) and \\( list\\_all \\), and using induction on the structure of the list \\( xs \\) to establish the desired equivalence.\n",
+    "hits": [
+      {
+        "id": "dc264786-9f88-4475-877c-9374d19de3c9",
+        "row_idx": 77026,
+        "document": "[type=lemma] file=l4v/lib/CorresK/CorresK_Lemmas.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that for a predicate P and a list xs, the statement \"list_all2 P xs xs\" is equivalent to \"list_all (\\<lambda>x. P x x) xs\".\n\nExplanation about proof:\nThe proof uses induction on the list xs. The base case, when xs is an empty list, is handled by simplification, showing both sides of the equation are true. For the inductive step, it assumes the property holds for a list ys and then proves it for the list obtained by adding an element a at the front. Simplification is used again to show the equivalence in this case.",
+        "metadata": {
+          "row_idx": 77026,
+          "score": 9.5,
+          "snippet": "lemma\n  list_all2_to_list_all:\n  \"list_all2 P xs xs = list_all (\\<lambda>x. P x x) xs\"\n  by (induct xs;simp)",
+          "source_file": "l4v/lib/CorresK/CorresK_Lemmas.thy",
+          "type": "lemma"
+        },
+        "score": 0.6939409050974922,
+        "mode": "dense"
+      },
+      {
+        "id": "ed29b9a3-5384-4ea5-9ec4-51a99719864a",
+        "row_idx": 33828,
+        "document": "[type=lemma] file=l4v/tools/autocorres/L1Peephole.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that the function mapping an element `s` to the proposition \"s is in the set of all x such that P(x)\" is equivalent to the predicate P itself.\n\nExplanation about proof:\nThe proof uses the `simp` method, which applies a series of simplification rules to reduce the left-hand side of the equation to the right-hand side. In this case, it simplifies the expression `(\\<lambda>s. s \\<in> {x. P x})` to `P` by leveraging the definition of set comprehension and the logical equivalence between set membership and the predicate that defines the set.",
+        "metadata": {
+          "row_idx": 33828,
+          "score": 9.5,
+          "snippet": "(*\n * The following sets of rules are used to simplify conditionals,\n * removing set notation (converting into predicate notation) and\n * generally removing logical cruft without being too aggressive in our\n * simplification.\n *)\n\nlemma in_set_to_pred [L1opt]: \"(\\<lambda>s. s \\<in> {x. P x}) = P\"\n  by simp",
+          "source_file": "l4v/tools/autocorres/L1Peephole.thy",
+          "type": "lemma"
+        },
+        "score": 0.672438924257466,
+        "mode": "dense"
+      },
+      {
+        "id": "dabda310-4493-48b1-b5cb-ea47fbc7a982",
+        "row_idx": 71419,
+        "document": "[type=lemma] file=l4v/tools/autocorres/tests/examples/SchorrWaite.thy\nGoal that the lemma aims to prove (within 2 lines):\nIf a list `xs` satisfies the predicate `List s p xs` and for all elements `x` in `xs`, the function `s` equals the function `t` at `x`, then the list `xs` also satisfies the predicate `List t p xs`.\n\nExplanation about proof:\nThe proof uses structural induction on the list `xs`. The `arbitrary: p` clause allows the predicate `p` to be considered as an arbitrary parameter throughout the induction. The base case and the inductive step are automatically handled by the `auto` tactic, which simplifies the goals using the assumptions and the definitions involved.",
+        "metadata": {
+          "row_idx": 71419,
+          "score": 9.5,
+          "snippet": "lemma List_eq_select [elim]: \"\\<lbrakk> List s p xs; \\<forall>x \\<in> set xs. s x = t x \\<rbrakk> \\<Longrightarrow> List t p xs\"\n  by (induct xs arbitrary: p) auto",
+          "source_file": "l4v/tools/autocorres/tests/examples/SchorrWaite.thy",
+          "type": "lemma"
+        },
+        "score": 0.6511585267853175,
+        "mode": "dense"
+      },
+      {
+        "id": "d0446859-e95e-4de1-81cd-6537f68c94d4",
+        "row_idx": 71868,
+        "document": "[type=lemma] file=l4v/sys-init/CreateObjects_SI.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that for a list `xs` and predicates `P` and `Q`, the conjunction of `list_all P xs` and `list_all Q xs` is equivalent to `list_all (P and Q) xs`.\n\nExplanation about proof:\nThe proof uses induction on the list `xs`. The base case handles the empty list, where both sides of the equation trivially hold true. For the inductive step, it assumes the statement holds for a list `ys` and proves it for `x # ys`, leveraging the definition of `list_all` and the logical conjunction `and`.",
+        "metadata": {
+          "row_idx": 71868,
+          "score": 9.5,
+          "snippet": "lemma list_all_conj:\n  \"(list_all P xs \\<and> list_all Q xs) = list_all (P and Q) xs\"\n  by (induct xs) auto",
+          "source_file": "l4v/sys-init/CreateObjects_SI.thy",
+          "type": "lemma"
+        },
+        "score": 0.6467641008718501,
+        "mode": "dense"
+      },
+      {
+        "id": "8b860f1d-b39a-493b-9260-11bc4e4f8d2d",
+        "row_idx": 82055,
+        "document": "[type=lemma] file=l4v/lib/Lib.thy\nGoal that the lemma aims to prove (within 2 lines):\nIf a predicate P holds for all elements of a list xs, and P implies P', then P' holds for all elements of xs.\n\nExplanation about proof:\nThe proof uses metis with the fact list_all_length, which connects list_all to the length-based universal quantification over list elements, allowing the implication from P to P' to be lifted pointwise across the entire list.",
+        "metadata": {
+          "row_idx": 82055,
+          "score": 8.5,
+          "snippet": "lemma list_allI:\n  \"\\<lbrakk>list_all P xs; \\<And>x. P x \\<Longrightarrow> P' x\\<rbrakk> \\<Longrightarrow> list_all P' xs\"\n  by (metis list_all_length)",
+          "source_file": "l4v/lib/Lib.thy",
+          "type": "lemma"
+        },
+        "score": 0.6397163367195882,
+        "mode": "dense"
+      }
+    ]
+  },
+  {
+    "case": 7,
+    "input": "lemma list_all_mem_subset:\n  \"list_all (\\<lambda>y. y \\<in> set xs) ys = (set ys \\<subseteq> set xs)\"",
+    "gt": "by (induct ys; simp)",
+    "proof": "by (rule iffI)\n   (clarsimp simp: Ball_set_list_all [symmetric] | blast)+",
+    "prompt": "You are an Isabelle/HOL proof assistant.\nUse the given References (explanation + snippet examples) to infer tactic/style patterns.\nProduce a concise, correct proof for the Target INPUT using standard tactics.\nReturn ONLY the proof script (no extra text).\n\n# References\n### Reference 1 (source: l4v/lib/HaskellLemmaBucket.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nIf a list `xs` is an element of the set of all tails of another list `ys`, then the set of elements in `xs` is a subset of the set of elements in `ys`.\n\nExplanation about proof:\nThe proof uses induction on the list `ys`. The base case handles the empty list, where the only tail is the empty list itself, and thus the subset relation trivially holds. For the inductive step, it considers two cases based on whether `xs` is the same as `ys` or a tail of the rest of `ys`. The `disjE` rule is used to handle these two cases. In both cases, simplification (`simp`) and logical reasoning (`blast`) are applied to establish that the set of elements in `xs` is indeed a subset of the set of elements in `ys`.\n\nSNIPPET (lemma and proof):\nlemma in_set_tailsD: \"xs \\<in> set (tails ys) \\<Longrightarrow> set xs \\<subseteq> set ys\"\n  apply (induct ys)\n   apply simp\n  apply simp\n  apply (erule disjE)\n   apply simp\n  apply simp\n  apply blast\n  done\n\n### Reference 2 (source: l4v/lib/ListLibLemmas.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nIf `after_in_list list x` returns `Some y`, then there exist lists `xs` and `ys` such that `list` can be decomposed into `xs @ (x # y # ys)` and `x` is not an element of `set xs`.\n\nExplanation about proof:\nThe proof uses structural induction on the list and the value `x`, with an arbitrary variable `a`. It simplifies the goal using the definition of `after_in_list` and splits cases based on the structure of the list. The base case is handled by simplification and force. For the inductive step, it introduces a witness for the existence of `xs` and `ys` using `exI` and simplifies the resulting goal.\n\nSNIPPET (lemma and proof):\nlemma after_in_listD: \"after_in_list list x = Some y \\<Longrightarrow> \\<exists>xs ys. list = xs @ (x # y # ys) \\<and> x \\<notin> set xs\"\n  apply (induct list x arbitrary: a rule: after_in_list.induct)\n    apply (simp split: if_split_asm | elim exE | force)+\n  apply (rule_tac x=\"x # xsa\" in exI)\n  apply simp\n  done\n\n### Reference 3 (source: l4v/proof/infoflow/Ipc_IF.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if the tail of a list `xs` is equal to a list starting with an element `x` followed by `xs'`, then the set of elements in `xs'` is a subset of the set of elements in `xs`.\n\nExplanation about proof:\nThe proof uses case analysis on the list `xs`. If `xs` is empty, the premise `tl xs = (x # xs')` cannot hold because the tail of an empty list is undefined. If `xs` is not empty, it can be written as `y # ys` for some `y` and `ys`. Then, `tl xs` becomes `ys`, and the premise implies `ys = x # xs'`. This means all elements of `xs'` are also elements of `ys` (which is `tl xs`), and thus `set xs'` is a subset of `set (y # ys)`, which is `set xs`.\n\nSNIPPET (lemma and proof):\nlemma tl_tl_in_set:\n  \"tl xs = (x # xs') \\<Longrightarrow> set xs' \\<subseteq> set xs\"\n  by (case_tac xs, auto)\n\n### Reference 4 (source: l4v/lib/Lib.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if for all elements in the list `xs`, `f x` implies `g x`, and `f' x` implies `f x`, then for all elements in the list `xs`, `f' x` implies `g x`.\n\nExplanation about proof:\nThe proof uses the `clarsimp` method combined with the `simp` tactic, specifically applying the symmetric form of the `Ball_set_list_all` theorem. This theorem equates the `list_all` predicate over lists with the `Ball` predicate over sets, allowing the use of set-theoretic properties to simplify the logical implications within the list context.\n\nSNIPPET (lemma and proof):\nlemma list_all_imp_chain:\n  \"\\<lbrakk>list_all (\\<lambda>x. f x \\<longrightarrow> g x) xs; list_all (\\<lambda>x. f' x \\<longrightarrow> f x) xs\\<rbrakk>\n  \\<Longrightarrow>  list_all (\\<lambda>x. f' x \\<longrightarrow> g x) xs\"\n  by (clarsimp simp: Ball_set_list_all [symmetric])\n\n### Reference 5 (source: l4v/lib/LemmaBucket.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma states that if None is not an element of set S, then Some x is in S if and only if x is in the image of the function 'the' applied to S.\n\nExplanation about proof:\nThe proof starts by applying the rule iffI, which is used to prove an equivalence by proving both directions separately.\nIn the first direction (Some x ∈ S ⟹ x ∈ the ` S), the proof uses force, which attempts to prove the goal using a combination of automated methods.\nFor the second direction (x ∈ the ` S ⟹ Some x ∈ S), the proof substitutes in_these_eq symmetrically and simplifies using Option.these_def.\nThen, it performs a case distinction on whether there exists a y such that xa equals Some y.\nFinally, it applies clarsimp twice to conclude the proof.\n\nSNIPPET (lemma and proof):\nlemma none_some_map: \"None \\<notin> S \\<Longrightarrow> Some x \\<in> S = (x \\<in> the ` S)\"\n  apply (rule iffI)\n   apply force\n  apply (subst in_these_eq[symmetric])\n  apply (clarsimp simp:Option.these_def)\n  apply (case_tac \"\\<exists>y. xa = Some y\")\n   by clarsimp+\n\n### Target:\nINPUT (lemma to prove):\nlemma list_all_mem_subset:\n  \"list_all (\\<lambda>y. y \\<in> set xs) ys = (set ys \\<subseteq> set xs)\"\n\nREQUIRED OUTPUT:\n- ONLY the Isabelle proof script that closes this lemma.\n- Do not echo the lemma. No commentary. Proof script only.\n",
+    "explanation": "\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma states that for two lists `xs` and `ys`, all elements of `ys` are in `xs` if and only if the set of elements in `ys` is a subset of the set of elements in `xs`.\n\nExplanation about proof:\nThe proof involves showing that the condition `list_all (\\<lambda>y. y \\<in> set xs) ys` is equivalent to the condition `set ys \\<subseteq> set xs`. This is done by demonstrating that if every element `y` in `ys` belongs to the set of `xs`, then the set of `ys` must be a subset of `xs`, and vice versa. The proof typically utilizes properties of lists and sets, particularly focusing on the definitions of `list_all` and subset relations.\n",
+    "hits": [
+      {
+        "id": "073e9328-d43b-46b0-825d-216c007761ea",
+        "row_idx": 11699,
+        "document": "[type=lemma] file=l4v/lib/HaskellLemmaBucket.thy\nGoal that the lemma aims to prove (within 2 lines):\nIf a list `xs` is an element of the set of all tails of another list `ys`, then the set of elements in `xs` is a subset of the set of elements in `ys`.\n\nExplanation about proof:\nThe proof uses induction on the list `ys`. The base case handles the empty list, where the only tail is the empty list itself, and thus the subset relation trivially holds. For the inductive step, it considers two cases based on whether `xs` is the same as `ys` or a tail of the rest of `ys`. The `disjE` rule is used to handle these two cases. In both cases, simplification (`simp`) and logical reasoning (`blast`) are applied to establish that the set of elements in `xs` is indeed a subset of the set of elements in `ys`.",
+        "metadata": {
+          "row_idx": 11699,
+          "score": 8.5,
+          "snippet": "lemma in_set_tailsD: \"xs \\<in> set (tails ys) \\<Longrightarrow> set xs \\<subseteq> set ys\"\n  apply (induct ys)\n   apply simp\n  apply simp\n  apply (erule disjE)\n   apply simp\n  apply simp\n  apply blast\n  done",
+          "source_file": "l4v/lib/HaskellLemmaBucket.thy",
+          "type": "lemma"
+        },
+        "score": 0.7018879610130668,
+        "mode": "dense"
+      },
+      {
+        "id": "18ca928f-29b8-4280-8a78-20caa77ad6b3",
+        "row_idx": 76549,
+        "document": "[type=lemma] file=l4v/lib/ListLibLemmas.thy\nGoal that the lemma aims to prove (within 2 lines):\nIf `after_in_list list x` returns `Some y`, then there exist lists `xs` and `ys` such that `list` can be decomposed into `xs @ (x # y # ys)` and `x` is not an element of `set xs`.\n\nExplanation about proof:\nThe proof uses structural induction on the list and the value `x`, with an arbitrary variable `a`. It simplifies the goal using the definition of `after_in_list` and splits cases based on the structure of the list. The base case is handled by simplification and force. For the inductive step, it introduces a witness for the existence of `xs` and `ys` using `exI` and simplifies the resulting goal.",
+        "metadata": {
+          "row_idx": 76549,
+          "score": 8.5,
+          "snippet": "lemma after_in_listD: \"after_in_list list x = Some y \\<Longrightarrow> \\<exists>xs ys. list = xs @ (x # y # ys) \\<and> x \\<notin> set xs\"\n  apply (induct list x arbitrary: a rule: after_in_list.induct)\n    apply (simp split: if_split_asm | elim exE | force)+\n  apply (rule_tac x=\"x # xsa\" in exI)\n  apply simp\n  done",
+          "source_file": "l4v/lib/ListLibLemmas.thy",
+          "type": "lemma"
+        },
+        "score": 0.6910296124227212,
+        "mode": "dense"
+      },
+      {
+        "id": "17403a3c-3ee4-4ccb-b0be-b41d39d09127",
+        "row_idx": 18740,
+        "document": "[type=lemma] file=l4v/proof/infoflow/Ipc_IF.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if the tail of a list `xs` is equal to a list starting with an element `x` followed by `xs'`, then the set of elements in `xs'` is a subset of the set of elements in `xs`.\n\nExplanation about proof:\nThe proof uses case analysis on the list `xs`. If `xs` is empty, the premise `tl xs = (x # xs')` cannot hold because the tail of an empty list is undefined. If `xs` is not empty, it can be written as `y # ys` for some `y` and `ys`. Then, `tl xs` becomes `ys`, and the premise implies `ys = x # xs'`. This means all elements of `xs'` are also elements of `ys` (which is `tl xs`), and thus `set xs'` is a subset of `set (y # ys)`, which is `set xs`.",
+        "metadata": {
+          "row_idx": 18740,
+          "score": 9.5,
+          "snippet": "lemma tl_tl_in_set:\n  \"tl xs = (x # xs') \\<Longrightarrow> set xs' \\<subseteq> set xs\"\n  by (case_tac xs, auto)",
+          "source_file": "l4v/proof/infoflow/Ipc_IF.thy",
+          "type": "lemma"
+        },
+        "score": 0.6890697072908424,
+        "mode": "dense"
+      },
+      {
+        "id": "7a8d782b-bf8b-42f0-9249-9cb1a77c1887",
+        "row_idx": 82106,
+        "document": "[type=lemma] file=l4v/lib/Lib.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if for all elements in the list `xs`, `f x` implies `g x`, and `f' x` implies `f x`, then for all elements in the list `xs`, `f' x` implies `g x`.\n\nExplanation about proof:\nThe proof uses the `clarsimp` method combined with the `simp` tactic, specifically applying the symmetric form of the `Ball_set_list_all` theorem. This theorem equates the `list_all` predicate over lists with the `Ball` predicate over sets, allowing the use of set-theoretic properties to simplify the logical implications within the list context.",
+        "metadata": {
+          "row_idx": 82106,
+          "score": 9.5,
+          "snippet": "lemma list_all_imp_chain:\n  \"\\<lbrakk>list_all (\\<lambda>x. f x \\<longrightarrow> g x) xs; list_all (\\<lambda>x. f' x \\<longrightarrow> f x) xs\\<rbrakk>\n  \\<Longrightarrow>  list_all (\\<lambda>x. f' x \\<longrightarrow> g x) xs\"\n  by (clarsimp simp: Ball_set_list_all [symmetric])",
+          "source_file": "l4v/lib/Lib.thy",
+          "type": "lemma"
+        },
+        "score": 0.6866371257298777,
+        "mode": "dense"
+      },
+      {
+        "id": "e9fa3797-7d7c-4b6b-a10b-e1af2b26a69d",
+        "row_idx": 90953,
+        "document": "[type=lemma] file=l4v/lib/LemmaBucket.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma states that if None is not an element of set S, then Some x is in S if and only if x is in the image of the function 'the' applied to S.\n\nExplanation about proof:\nThe proof starts by applying the rule iffI, which is used to prove an equivalence by proving both directions separately.\nIn the first direction (Some x ∈ S ⟹ x ∈ the ` S), the proof uses force, which attempts to prove the goal using a combination of automated methods.\nFor the second direction (x ∈ the ` S ⟹ Some x ∈ S), the proof substitutes in_these_eq symmetrically and simplifies using Option.these_def.\nThen, it performs a case distinction on whether there exists a y such that xa equals Some y.\nFinally, it applies clarsimp twice to conclude the proof.",
+        "metadata": {
+          "row_idx": 90953,
+          "score": 9.5,
+          "snippet": "lemma none_some_map: \"None \\<notin> S \\<Longrightarrow> Some x \\<in> S = (x \\<in> the ` S)\"\n  apply (rule iffI)\n   apply force\n  apply (subst in_these_eq[symmetric])\n  apply (clarsimp simp:Option.these_def)\n  apply (case_tac \"\\<exists>y. xa = Some y\")\n   by clarsimp+",
+          "source_file": "l4v/lib/LemmaBucket.thy",
+          "type": "lemma"
+        },
+        "score": 0.6800344662015021,
+        "mode": "dense"
+      }
+    ]
+  },
+  {
+    "case": 8,
+    "input": "lemma F_all2_eq:\n  \"(\\<And>x xs'. x \\<in> set xs \\<Longrightarrow> set xs' \\<subseteq> set xs \\<Longrightarrow> F x x xs' xs') \\Longrightarrow> F_all2 F xs xs\"\n apply (simp add: F_all2_def)\n apply (rule_tac x=\"\\<lambda>x y. x \\<in> set xs \\<and> x = y\" in exI)\n apply (intro conjI impI allI)\n apply (drule list_all2_conjD)\n apply (simp add: list.rel_eq)\n apply (simp add: list_all2_to_list_all list_all_mem_subset)\n apply (rule list.rel_refl_strong;simp)\n done\n\nlemma F_all2_conjI:\n  \"F_all2 F xs ys \\<Longrightarrow> F_all2 F' xs ys \\<Longrightarrow>\n    F_all2 (\\<lambda>x y xs ys. F x y xs ys \\<and> F' x y xs ys) xs ys\"\n  apply (clarsimp simp: F_all2_def)\n  apply (rule_tac x=\"\\<lambda>x y. F'a x y \\<and> F'aa x y\" in exI)",
+    "gt": "by (auto dest: list_all2_conjD intro: list_all2_conj)",
+    "proof": "apply (auto simp: F_all2_def)\napply (rule_tac x=\"\\<lambda>x y. F x y xs ys\" in exI)\napply (auto dest: list_all2_conjD intro: list_all2_conj)\ndone",
+    "prompt": "You are an Isabelle/HOL proof assistant.\nUse the given References (explanation + snippet examples) to infer tactic/style patterns.\nProduce a concise, correct proof for the Target INPUT using standard tactics.\nReturn ONLY the proof script (no extra text).\n\n# References\n### Reference 1 (source: l4v/lib/CorresK/CorresK_Lemmas.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nIf for all x and xs', where x is in set xs and xs' is a subset of xs, the property F x x xs' xs' holds, then F_all2 F xs xs holds.\n\nExplanation about proof:\nThe proof unfolds the definition of F_all2 and introduces a witness relation defined as equality on elements within xs. It then proves the required conjunction and universal quantification by leveraging list-related simplifications, including list_all2_conjD, list.rel_eq, and list_all2_to_list_all, and concludes with reflexivity of the list relation under the given constraints.\n\nSNIPPET (lemma and proof):\nlemma F_all2_eq:\n  \"(\\<And>x xs'. x \\<in> set xs \\<Longrightarrow> set xs' \\<subseteq> set xs \\<Longrightarrow> F x x xs' xs') \\<Longrightarrow> F_all2 F xs xs\"\n apply (simp add: F_all2_def)\n apply (rule_tac x=\"\\<lambda>x y. x \\<in> set xs \\<and> x = y\" in exI)\n apply (intro conjI impI allI)\n apply (drule list_all2_conjD)\n apply (simp add: list.rel_eq)\n apply (simp add: list_all2_to_list_all list_all_mem_subset)\n apply (rule list.rel_refl_strong;simp)\n done\n\n### Reference 2 (source: l4v/lib/CorresK/CorresK_Lemmas.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nIf F relates two lists xs and ys, and there exists some predicate F' such that F is equivalent to list_all2 F', then F_all2 (the lifted version of F) holds for xs and ys.\n\nExplanation about proof:\nThe proof simplifies the goal using the definition of F_all2, then introduces F' as the witness for the existential quantifier in F_all2, and finally applies automatic reasoning (auto) to discharge the remaining goals based on the given assumptions.\n\nSNIPPET (lemma and proof):\nlemma F_all2_list:\n   \"F xs ys \\<Longrightarrow> \\<exists>F'. (\\<forall>xs ys. (F xs ys = list_all2 F' xs ys)) \\<Longrightarrow> F_all2 (\\<lambda>_ _ xs ys. F xs ys) xs ys\"\n  apply (clarsimp simp: F_all2_def)\n  apply (rule_tac x=F' in exI)\n  by auto\n\n### Reference 3 (source: l4v/lib/CorresK/CorresK_Lemmas.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nIf two binary predicates F and F' hold pointwise over lists xs and ys under F_all2, then their conjunction also holds pointwise under F_all2.\n\nExplanation about proof:\nThe proof unfolds the definition of F_all2 using clarsimp, then introduces a witness function that combines the two existing witnesses for F and F' via conjunction. It concludes by applying list_all2_conjD to extract the pointwise properties and list_all2_conj to recombine them into the desired conjunction.\n\nSNIPPET (lemma and proof):\nlemma F_all2_conjI:\n  \"F_all2 F xs ys \\<Longrightarrow> F_all2 F' xs ys \\<Longrightarrow>\n    F_all2 (\\<lambda>x y xs ys. F x y xs ys \\<and> F' x y xs ys) xs ys\"\n  apply (clarsimp simp: F_all2_def)\n  apply (rule_tac x=\"\\<lambda>x y. F'a x y \\<and> F'aa x y\" in exI)\n  by (auto dest: list_all2_conjD intro: list_all2_conj)\n\n### Reference 4 (source: l4v/lib/Lib.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if for all elements in the list `xs`, `f x` implies `g x`, and `f' x` implies `f x`, then for all elements in the list `xs`, `f' x` implies `g x`.\n\nExplanation about proof:\nThe proof uses the `clarsimp` method combined with the `simp` tactic, specifically applying the symmetric form of the `Ball_set_list_all` theorem. This theorem equates the `list_all` predicate over lists with the `Ball` predicate over sets, allowing the use of set-theoretic properties to simplify the logical implications within the list context.\n\nSNIPPET (lemma and proof):\nlemma list_all_imp_chain:\n  \"\\<lbrakk>list_all (\\<lambda>x. f x \\<longrightarrow> g x) xs; list_all (\\<lambda>x. f' x \\<longrightarrow> f x) xs\\<rbrakk>\n  \\<Longrightarrow>  list_all (\\<lambda>x. f' x \\<longrightarrow> g x) xs\"\n  by (clarsimp simp: Ball_set_list_all [symmetric])\n\n### Reference 5 (source: l4v/proof/refine/X64/Untyped_R.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if two lists `xs` and `ys` satisfy a certain relationship `F` and their corresponding elements also satisfy specific conditions, then the operations `mapM_x f xs` and `mapM_x g ys` are correspondent under the given predicates `P` and `P'`.\n\nExplanation about proof:\nThe proof begins by inserting the assumptions `x` (that `xs` and `ys` are related by `list_all2 F`) and `w` (that `xs` and `ys` are suffixes of `oxs` and `oys`, respectively). It then proceeds by induction on `xs`, with `ys` being an arbitrary list. The base case simplifies using the definitions of `mapM_x` and `sequence_x`. In the inductive step, it handles the case where `ys` is empty and then proceeds with the non-empty case. The proof uses `corres_guard_imp` and `corres_split` to split the problem into smaller parts, applying the assumptions `y` and `z` as needed. It also uses `suffix_ConsD` to deduce properties about the suffixes and applies the rules of Hoare logic to ensure that the postconditions hold after executing `f` and `g`.\n\nSNIPPET (lemma and proof):\nlemma corres_list_all2_mapM_':\n  assumes w: \"suffix xs oxs\" \"suffix ys oys\"\n  assumes y: \"\\<And>x xs y ys. \\<lbrakk> F x y; suffix (x # xs) oxs; suffix (y # ys) oys \\<rbrakk>\n               \\<Longrightarrow> corres dc (P (x # xs)) (P' (y # ys)) (f x) (g y)\"\n  assumes z: \"\\<And>x y xs. \\<lbrakk> F x y; suffix (x # xs) oxs \\<rbrakk> \\<Longrightarrow> \\<lbrace>P (x # xs)\\<rbrace> f x \\<lbrace>\\<lambda>rv. P xs\\<rbrace>\"\n             \"\\<And>x y ys. \\<lbrakk> F x y; suffix (y # ys) oys \\<rbrakk> \\<Longrightarrow> \\<lbrace>P' (y # ys)\\<rbrace> g y \\<lbrace>\\<lambda>rv. P' ys\\<rbrace>\"\n  assumes x: \"list_all2 F xs ys\"\n  shows \"corres dc (P xs) (P' ys) (mapM_x f xs) (mapM_x g ys)\"\n  apply (insert x w)\n  apply (induct xs arbitrary: ys)\n   apply (simp add: mapM_x_def sequence_x_def)\n  apply (case_tac ys)\n   apply simp\n  apply (clarsimp simp add: mapM_x_def sequence_x_def)\n  apply (rule corres_guard_imp)\n    apply (rule corres_split[OF y])\n         apply assumption\n        apply assumption\n       apply assumption\n      apply (clarsimp dest!: suffix_ConsD)\n      apply (erule meta_allE, (drule(1) meta_mp)+)\n      apply assumption\n     apply (erule(1) z)+\n   apply simp+\n  done\n\n### Target:\nINPUT (lemma to prove):\nlemma F_all2_eq:\n  \"(\\<And>x xs'. x \\<in> set xs \\<Longrightarrow> set xs' \\<subseteq> set xs \\<Longrightarrow> F x x xs' xs') \\Longrightarrow> F_all2 F xs xs\"\n apply (simp add: F_all2_def)\n apply (rule_tac x=\"\\<lambda>x y. x \\<in> set xs \\<and> x = y\" in exI)\n apply (intro conjI impI allI)\n apply (drule list_all2_conjD)\n apply (simp add: list.rel_eq)\n apply (simp add: list_all2_to_list_all list_all_mem_subset)\n apply (rule list.rel_refl_strong;simp)\n done\n\nlemma F_all2_conjI:\n  \"F_all2 F xs ys \\<Longrightarrow> F_all2 F' xs ys \\<Longrightarrow>\n    F_all2 (\\<lambda>x y xs ys. F x y xs ys \\<and> F' x y xs ys) xs ys\"\n  apply (clarsimp simp: F_all2_def)\n  apply (rule_tac x=\"\\<lambda>x y. F'a x y \\<and> F'aa x y\" in exI)\n\nREQUIRED OUTPUT:\n- ONLY the Isabelle proof script that closes this lemma.\n- Do not echo the lemma. No commentary. Proof script only.\n",
+    "explanation": "\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma states that if a relation \\( F \\) holds for elements in two lists under certain conditions, then it holds for all corresponding pairs in those lists.\n\nExplanation about proof:\nThe proof begins by applying simplifications to the definition of \\( F\\_all2 \\). It then constructs a specific relation using an existential quantifier, ensuring that the elements from the first list are included in the second list. The proof proceeds by introducing conjunctions and implications, utilizing existing properties of list relations to establish the desired result. Finally, it confirms the reflexivity of the relation, completing the proof.\n",
+    "hits": [
+      {
+        "id": "b89137a9-8ce9-4afa-bdf8-f56eb041407c",
+        "row_idx": 77088,
+        "document": "[type=lemma] file=l4v/lib/CorresK/CorresK_Lemmas.thy\nGoal that the lemma aims to prove (within 2 lines):\nIf for all x and xs', where x is in set xs and xs' is a subset of xs, the property F x x xs' xs' holds, then F_all2 F xs xs holds.\n\nExplanation about proof:\nThe proof unfolds the definition of F_all2 and introduces a witness relation defined as equality on elements within xs. It then proves the required conjunction and universal quantification by leveraging list-related simplifications, including list_all2_conjD, list.rel_eq, and list_all2_to_list_all, and concludes with reflexivity of the list relation under the given constraints.",
+        "metadata": {
+          "row_idx": 77088,
+          "score": 9.5,
+          "snippet": "lemma F_all2_eq:\n  \"(\\<And>x xs'. x \\<in> set xs \\<Longrightarrow> set xs' \\<subseteq> set xs \\<Longrightarrow> F x x xs' xs') \\<Longrightarrow> F_all2 F xs xs\"\n apply (simp add: F_all2_def)\n apply (rule_tac x=\"\\<lambda>x y. x \\<in> set xs \\<and> x = y\" in exI)\n apply (intro conjI impI allI)\n apply (drule list_all2_conjD)\n apply (simp add: list.rel_eq)\n apply (simp add: list_all2_to_list_all list_all_mem_subset)\n apply (rule list.rel_refl_strong;simp)\n done",
+          "source_file": "l4v/lib/CorresK/CorresK_Lemmas.thy",
+          "type": "lemma"
+        },
+        "score": 0.6492959310873564,
+        "mode": "dense"
+      },
+      {
+        "id": "aa97e87b-867d-479e-929b-d5bfed307aa1",
+        "row_idx": 77007,
+        "document": "[type=lemma] file=l4v/lib/CorresK/CorresK_Lemmas.thy\nGoal that the lemma aims to prove (within 2 lines):\nIf F relates two lists xs and ys, and there exists some predicate F' such that F is equivalent to list_all2 F', then F_all2 (the lifted version of F) holds for xs and ys.\n\nExplanation about proof:\nThe proof simplifies the goal using the definition of F_all2, then introduces F' as the witness for the existential quantifier in F_all2, and finally applies automatic reasoning (auto) to discharge the remaining goals based on the given assumptions.",
+        "metadata": {
+          "row_idx": 77007,
+          "score": 8.5,
+          "snippet": "lemma F_all2_list:\n   \"F xs ys \\<Longrightarrow> \\<exists>F'. (\\<forall>xs ys. (F xs ys = list_all2 F' xs ys)) \\<Longrightarrow> F_all2 (\\<lambda>_ _ xs ys. F xs ys) xs ys\"\n  apply (clarsimp simp: F_all2_def)\n  apply (rule_tac x=F' in exI)\n  by auto",
+          "source_file": "l4v/lib/CorresK/CorresK_Lemmas.thy",
+          "type": "lemma"
+        },
+        "score": 0.6450110248676864,
+        "mode": "dense"
+      },
+      {
+        "id": "9ef56dfb-4284-4862-9e22-1fc96327c2c9",
+        "row_idx": 77132,
+        "document": "[type=lemma] file=l4v/lib/CorresK/CorresK_Lemmas.thy\nGoal that the lemma aims to prove (within 2 lines):\nIf two binary predicates F and F' hold pointwise over lists xs and ys under F_all2, then their conjunction also holds pointwise under F_all2.\n\nExplanation about proof:\nThe proof unfolds the definition of F_all2 using clarsimp, then introduces a witness function that combines the two existing witnesses for F and F' via conjunction. It concludes by applying list_all2_conjD to extract the pointwise properties and list_all2_conj to recombine them into the desired conjunction.",
+        "metadata": {
+          "row_idx": 77132,
+          "score": 7.5,
+          "snippet": "lemma F_all2_conjI:\n  \"F_all2 F xs ys \\<Longrightarrow> F_all2 F' xs ys \\<Longrightarrow>\n    F_all2 (\\<lambda>x y xs ys. F x y xs ys \\<and> F' x y xs ys) xs ys\"\n  apply (clarsimp simp: F_all2_def)\n  apply (rule_tac x=\"\\<lambda>x y. F'a x y \\<and> F'aa x y\" in exI)\n  by (auto dest: list_all2_conjD intro: list_all2_conj)",
+          "source_file": "l4v/lib/CorresK/CorresK_Lemmas.thy",
+          "type": "lemma"
+        },
+        "score": 0.6026014000200278,
+        "mode": "dense"
+      },
+      {
+        "id": "7a8d782b-bf8b-42f0-9249-9cb1a77c1887",
+        "row_idx": 82106,
+        "document": "[type=lemma] file=l4v/lib/Lib.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if for all elements in the list `xs`, `f x` implies `g x`, and `f' x` implies `f x`, then for all elements in the list `xs`, `f' x` implies `g x`.\n\nExplanation about proof:\nThe proof uses the `clarsimp` method combined with the `simp` tactic, specifically applying the symmetric form of the `Ball_set_list_all` theorem. This theorem equates the `list_all` predicate over lists with the `Ball` predicate over sets, allowing the use of set-theoretic properties to simplify the logical implications within the list context.",
+        "metadata": {
+          "row_idx": 82106,
+          "score": 9.5,
+          "snippet": "lemma list_all_imp_chain:\n  \"\\<lbrakk>list_all (\\<lambda>x. f x \\<longrightarrow> g x) xs; list_all (\\<lambda>x. f' x \\<longrightarrow> f x) xs\\<rbrakk>\n  \\<Longrightarrow>  list_all (\\<lambda>x. f' x \\<longrightarrow> g x) xs\"\n  by (clarsimp simp: Ball_set_list_all [symmetric])",
+          "source_file": "l4v/lib/Lib.thy",
+          "type": "lemma"
+        },
+        "score": 0.592355935203302,
+        "mode": "dense"
+      },
+      {
+        "id": "ed71446e-91ed-43a2-af72-bea4295eb3d7",
+        "row_idx": 12483,
+        "document": "[type=lemma] file=l4v/proof/refine/X64/Untyped_R.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if two lists `xs` and `ys` satisfy a certain relationship `F` and their corresponding elements also satisfy specific conditions, then the operations `mapM_x f xs` and `mapM_x g ys` are correspondent under the given predicates `P` and `P'`.\n\nExplanation about proof:\nThe proof begins by inserting the assumptions `x` (that `xs` and `ys` are related by `list_all2 F`) and `w` (that `xs` and `ys` are suffixes of `oxs` and `oys`, respectively). It then proceeds by induction on `xs`, with `ys` being an arbitrary list. The base case simplifies using the definitions of `mapM_x` and `sequence_x`. In the inductive step, it handles the case where `ys` is empty and then proceeds with the non-empty case. The proof uses `corres_guard_imp` and `corres_split` to split the problem into smaller parts, applying the assumptions `y` and `z` as needed. It also uses `suffix_ConsD` to deduce properties about the suffixes and applies the rules of Hoare logic to ensure that the postconditions hold after executing `f` and `g`.",
+        "metadata": {
+          "row_idx": 12483,
+          "score": 8.5,
+          "snippet": "lemma corres_list_all2_mapM_':\n  assumes w: \"suffix xs oxs\" \"suffix ys oys\"\n  assumes y: \"\\<And>x xs y ys. \\<lbrakk> F x y; suffix (x # xs) oxs; suffix (y # ys) oys \\<rbrakk>\n               \\<Longrightarrow> corres dc (P (x # xs)) (P' (y # ys)) (f x) (g y)\"\n  assumes z: \"\\<And>x y xs. \\<lbrakk> F x y; suffix (x # xs) oxs \\<rbrakk> \\<Longrightarrow> \\<lbrace>P (x # xs)\\<rbrace> f x \\<lbrace>\\<lambda>rv. P xs\\<rbrace>\"\n             \"\\<And>x y ys. \\<lbrakk> F x y; suffix (y # ys) oys \\<rbrakk> \\<Longrightarrow> \\<lbrace>P' (y # ys)\\<rbrace> g y \\<lbrace>\\<lambda>rv. P' ys\\<rbrace>\"\n  assumes x: \"list_all2 F xs ys\"\n  shows \"corres dc (P xs) (P' ys) (mapM_x f xs) (mapM_x g ys)\"\n  apply (insert x w)\n  apply (induct xs arbitrary: ys)\n   apply (simp add: mapM_x_def sequence_x_def)\n  apply (case_tac ys)\n   apply simp\n  apply (clarsimp simp add: mapM_x_def sequence_x_def)\n  apply (rule corres_guard_imp)\n    apply (rule corres_split[OF y])\n         apply assumption\n        apply assumption\n       apply assumption\n      apply (clarsimp dest!: suffix_ConsD)\n      apply (erule meta_allE, (drule(1) meta_mp)+)\n      apply assumption\n     apply (erule(1) z)+\n   apply simp+\n  done",
+          "source_file": "l4v/proof/refine/X64/Untyped_R.thy",
+          "type": "lemma"
+        },
+        "score": 0.5884567231025304,
+        "mode": "dense"
+      }
+    ]
+  },
+  {
+    "case": 9,
+    "input": "lemma corresK_mapM_list_all2:\n  assumes x: \"\\<And>x y xs ys. corres_underlyingK sr nf nf' (F x y xs ys) r' (I (x#xs)) (I' (y#ys)) (f x) (f' y)\"\n  assumes \"\\<And>x y xs. \\<lbrakk> S x y; suffix (x#xs) as \\rbrakk> \\Longrightarrow> \\<lbrace> I  (x#xs) \\<rbrace> f  x \\<lbrace> \\<lambda>rv. I  xs \\<rbrace>\"\n  assumes \"\\<And>x y ys. \\<lbrakk> S x y; suffix (y#ys) cs \\rbrakk> \\Longrightarrow> \\<lbrace> I' (y#ys) \\<rbrace> f' y \\<lbrace> \\<lambda>rv. I' ys \\<rbrace>\"\n  shows \"corres_underlyingK sr nf nf'\n          (r [] [] \\<and> (\\<forall> x y xs ys. r' x y \\longrightarrow> r xs ys \\longrightarrow> r (x # xs) (y # ys)) \\and>\n            list_all2 S as cs \\and> F_all2 F as cs)\n                            r (I as) (I' cs) (mapM f as) (mapM f' cs)\"\n  unfolding corres_underlyingK_def\n  apply (clarsimp simp: F_all2_def)\n  subgoal for F'\n  apply (rule corres_mapM_list_all2[of r r' \"\\<lambda>x y. S x y \\<and> F' x y\"]; (rule assms | assumption | clarsimp)?)\n  apply (rule x[THEN corresK_unlift])\n  apply (drule list_all2_conjD)\n  apply (clarsimp simp: assms | assumption)+\n  apply (rule list_all2_conj; simp)\n  done\n  done\n\nlemma corresK_discard_rv:\n  assumes A[corresK]: \"corres_underlyingK sr nf nf' F r' P P' a c\"\n  shows \"corres_underlyingK sr nf nf' F dc P P' (do x \\<leftarrow> a; return () od) (do x \\<leftarrow> c; return () od)\"",
+    "gt": "by corresKsimp",
+    "proof": "unfolding corres_underlyingK_def\napply (clarsimp simp: F_all2_def)\nsubgoal for F'\n  apply (rule corres_mapM_list_all2[of r r' \"\\<lambda>x y. S x y \\<and> F' x y\"]; (rule assms | assumption | clarsimp)?)\n  apply (rule x[THEN corresK_unlift])\n  apply (drule list_all2_conjD)\n  apply (clarsimp simp: assms | assumption)+\n  apply (rule list_all2_conj; simp)\ndone",
+    "prompt": "You are an Isabelle/HOL proof assistant.\nUse the given References (explanation + snippet examples) to infer tactic/style patterns.\nProduce a concise, correct proof for the Target INPUT using standard tactics.\nReturn ONLY the proof script (no extra text).\n\n# References\n### Reference 1 (source: l4v/proof/refine/AARCH64/Untyped_R.thy):\nEXPLANATION:\nGeneral purpose of the collected lemmas (within 2 lines):\nThe lemma `corres_list_all2_mapM_` is a derived rule that establishes a correspondence between list-related relations and monadic mapping operations, specialized using reflexivity of suffixes.\n\nExplanation about how they support later proofs:\nIt simplifies proof steps involving list transformations under monadic contexts by pre-applying reflexivity facts (`suffix_refl`), reducing the need to reprove these conditions in subsequent reasoning about list correspondences.\n\nSNIPPET (lemma and proof):\nlemmas corres_list_all2_mapM_\n     = corres_list_all2_mapM_' [OF suffix_refl suffix_refl]\n\n### Reference 2 (source: l4v/proof/refine/X64/Untyped_R.thy):\nEXPLANATION:\nGeneral purpose of the collected lemmas (within 2 lines):\nThe lemma `corres_list_all2_mapM_` is a derived rule that establishes a correspondence between list relations and monadic map operations, using reflexivity of suffixes to strengthen the applicability of the base lemma.\n\nExplanation about how they support later proofs:\nIt supports later proofs by enabling direct substitution of reflexive suffix relations into contexts involving list-wise monadic mappings, thereby simplifying verification of program transformations that preserve structural and semantic correspondences between lists under monadic computations.\n\nSNIPPET (lemma and proof):\nlemmas corres_list_all2_mapM_\n     = corres_list_all2_mapM_' [OF suffix_refl suffix_refl]\n\n### Reference 3 (source: l4v/proof/refine/ARM_HYP/Untyped_R.thy):\nEXPLANATION:\nGeneral purpose of the collected lemmas (within 2 lines):\nThe lemma `corres_list_all2_mapM_` is a rewrite rule that combines the property of `corres_list_all2_mapM_'` with reflexivity of suffixes to simplify expressions involving list correspondence under monadic mapping.\n\nExplanation about how they support later proofs:\nIt enables automated simplification in proofs where list structures are transformed via monadic operations and suffix equality is known to hold, reducing the need for manual application of reflexivity and list correspondence rules.\n\nSNIPPET (lemma and proof):\nlemmas corres_list_all2_mapM_\n     = corres_list_all2_mapM_' [OF suffix_refl suffix_refl]\n\n### Reference 4 (source: l4v/lib/ExtraCorres.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if two lists `as` and `cs` satisfy a certain relationship defined by `S`, and if corresponding elements of these lists satisfy a relationship defined by `r'` under the function `f` and `f'`, then the monadic operations `mapM f as` and `mapM f' cs` satisfy a relationship defined by `r`.\n\nExplanation about proof:\nThe proof uses induction on the `list_all2_induct_suffixeq` rule, which allows reasoning about pairs of lists that satisfy `list_all2` and are related by a suffix relationship. The base case handles empty lists, directly applying the assumption `rn` and simplifying with definitions of `mapM` and `sequence`. For the inductive step, it assumes the property holds for the tails of the lists (`xs` and `ys`) and proves it for the lists including the heads (`x` and `y`). It constructs a correspondence (`corr'`) for the heads using the `corr` assumption and then applies the `corres_underlying_split` rule twice to combine the correspondences for the heads and tails, ensuring the overall correspondence satisfies the required conditions.\n\nSNIPPET (lemma and proof):\n(* list_all2 has _much_ nicer simps than set (zip _ _).\n    See KernelInit_R: corres_init_objs for an example *)\nlemma corres_mapM_list_all2:\n  assumes rn: \"r [] []\"\n  and     rc: \"\\<And>x xs y ys. \\<lbrakk> r xs ys; r' x y \\<rbrakk> \\<Longrightarrow> r (x # xs) (y # ys)\"\n  and   corr: \"\\<And>x xs y ys. \\<lbrakk> S x y; list_all2 S xs ys \\<rbrakk>\n               \\<Longrightarrow> corres_underlying sr nf nf' r' (Q (x # xs)) (Q' (y # ys)) (f x) (f' y)\"\n  and     ha: \"\\<And>x xs y. \\<lbrakk> S x y; suffix (x#xs) as \\<rbrakk> \\<Longrightarrow> \\<lbrace>Q  (x # xs)\\<rbrace> f x \\<lbrace>\\<lambda>r. Q xs\\<rbrace>\"\n  and     hc: \"\\<And>x y ys. \\<lbrakk> S x y; suffix (y#ys) cs \\<rbrakk> \\<Longrightarrow> \\<lbrace>Q' (y # ys) \\<rbrace> f' y \\<lbrace>\\<lambda>r. Q' ys\\<rbrace>\"\n  and   lall: \"list_all2 S as cs\"\n  shows       \"corres_underlying sr nf nf' r (Q as) (Q' cs) (mapM f as) (mapM f' cs)\"\n  using lall\nproof (induct rule: list_all2_induct_suffixeq)\n  case Nil\n  thus ?case\n    unfolding mapM_def sequence_def by (auto intro: rn)\nnext\n  case  (Cons x xs y ys)\n\n  have corr': \"corres_underlying sr nf nf' r' (Q (x # xs)) (Q' (y # ys)) (f x) (f' y)\"\n  proof (rule corr)\n    show \"list_all2 S xs ys\" by (simp add: Cons)\n  qed fact+\n\n  show ?case\n    apply (simp add: mapM_Cons)\n    apply (rule corres_underlying_split [OF corr' _ ha [OF Cons(2)] hc [OF Cons(2)]])\n    apply (rule corres_underlying_split [OF Cons(3) _ hoare_TrueI hoare_TrueI])\n    apply (simp add: rc)\n    apply (rule Cons.hyps)+\n    done\n\n### Reference 5 (source: l4v/proof/refine/RISCV64/Untyped_R.thy):\nEXPLANATION:\nGeneral purpose of the collected lemmas (within 2 lines):\nThe lemma `corres_list_all2_mapM_` is a rewrite rule that establishes a correspondence between list-related relations and monadic mapping operations, specialized using reflexivity of the suffix relation.\n\nExplanation about how they support later proofs:\nIt simplifies proofs involving list transformations under monadic contexts by reducing complex correspondences to simpler forms, leveraging the reflexive property of suffix to eliminate redundant assumptions in inductive or relational reasoning.\n\nSNIPPET (lemma and proof):\nlemmas corres_list_all2_mapM_\n     = corres_list_all2_mapM_' [OF suffix_refl suffix_refl]\n\n### Target:\nINPUT (lemma to prove):\nlemma corresK_mapM_list_all2:\n  assumes x: \"\\<And>x y xs ys. corres_underlyingK sr nf nf' (F x y xs ys) r' (I (x#xs)) (I' (y#ys)) (f x) (f' y)\"\n  assumes \"\\<And>x y xs. \\<lbrakk> S x y; suffix (x#xs) as \\rbrakk> \\Longrightarrow> \\<lbrace> I  (x#xs) \\<rbrace> f  x \\<lbrace> \\<lambda>rv. I  xs \\<rbrace>\"\n  assumes \"\\<And>x y ys. \\<lbrakk> S x y; suffix (y#ys) cs \\rbrakk> \\Longrightarrow> \\<lbrace> I' (y#ys) \\<rbrace> f' y \\<lbrace> \\<lambda>rv. I' ys \\<rbrace>\"\n  shows \"corres_underlyingK sr nf nf'\n          (r [] [] \\<and> (\\<forall> x y xs ys. r' x y \\longrightarrow> r xs ys \\longrightarrow> r (x # xs) (y # ys)) \\and>\n            list_all2 S as cs \\and> F_all2 F as cs)\n                            r (I as) (I' cs) (mapM f as) (mapM f' cs)\"\n  unfolding corres_underlyingK_def\n  apply (clarsimp simp: F_all2_def)\n  subgoal for F'\n  apply (rule corres_mapM_list_all2[of r r' \"\\<lambda>x y. S x y \\<and> F' x y\"]; (rule assms | assumption | clarsimp)?)\n  apply (rule x[THEN corresK_unlift])\n  apply (drule list_all2_conjD)\n  apply (clarsimp simp: assms | assumption)+\n  apply (rule list_all2_conj; simp)\n  done\n  done\n\nlemma corresK_discard_rv:\n  assumes A[corresK]: \"corres_underlyingK sr nf nf' F r' P P' a c\"\n  shows \"corres_underlyingK sr nf nf' F dc P P' (do x \\<leftarrow> a; return () od) (do x \\<leftarrow> c; return () od)\"\n\nREQUIRED OUTPUT:\n- ONLY the Isabelle proof script that closes this lemma.\n- Do not echo the lemma. No commentary. Proof script only.\n",
+    "explanation": "\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to establish a correspondence between two computations involving lists, ensuring that if certain conditions hold for the elements of the lists, then the overall computations will also correspond under specified relations.\n\nExplanation about proof:\nThe proof utilizes the assumptions provided to show that the correspondence holds for the list operations. It applies the `corres_mapM_list_all2` lemma to relate the computations of `mapM f as` and `mapM f' cs` under the conditions specified by the relations `r` and `r'`. The proof involves unpacking the definitions and applying the assumptions to derive the necessary correspondences, ultimately confirming that the overall structure of the computations respects the required relations.\n",
+    "hits": [
+      {
+        "id": "e8f0387d-229e-49b3-9bc9-d1b2ab3b05c9",
+        "row_idx": 62627,
+        "document": "[type=lemmas] file=l4v/proof/refine/AARCH64/Untyped_R.thy\nGeneral purpose of the collected lemmas (within 2 lines):\nThe lemma `corres_list_all2_mapM_` is a derived rule that establishes a correspondence between list-related relations and monadic mapping operations, specialized using reflexivity of suffixes.\n\nExplanation about how they support later proofs:\nIt simplifies proof steps involving list transformations under monadic contexts by pre-applying reflexivity facts (`suffix_refl`), reducing the need to reprove these conditions in subsequent reasoning about list correspondences.",
+        "metadata": {
+          "row_idx": 62627,
+          "score": 7.5,
+          "snippet": "lemmas corres_list_all2_mapM_\n     = corres_list_all2_mapM_' [OF suffix_refl suffix_refl]",
+          "source_file": "l4v/proof/refine/AARCH64/Untyped_R.thy",
+          "type": "lemmas"
+        },
+        "score": 0.7212797729629499,
+        "mode": "dense"
+      },
+      {
+        "id": "feea8016-e274-470d-800d-158bfd3908a5",
+        "row_idx": 60293,
+        "document": "[type=lemmas] file=l4v/proof/refine/X64/Untyped_R.thy\nGeneral purpose of the collected lemmas (within 2 lines):\nThe lemma `corres_list_all2_mapM_` is a derived rule that establishes a correspondence between list relations and monadic map operations, using reflexivity of suffixes to strengthen the applicability of the base lemma.\n\nExplanation about how they support later proofs:\nIt supports later proofs by enabling direct substitution of reflexive suffix relations into contexts involving list-wise monadic mappings, thereby simplifying verification of program transformations that preserve structural and semantic correspondences between lists under monadic computations.",
+        "metadata": {
+          "row_idx": 60293,
+          "score": 6.5,
+          "snippet": "lemmas corres_list_all2_mapM_\n     = corres_list_all2_mapM_' [OF suffix_refl suffix_refl]",
+          "source_file": "l4v/proof/refine/X64/Untyped_R.thy",
+          "type": "lemmas"
+        },
+        "score": 0.7206193905284376,
+        "mode": "dense"
+      },
+      {
+        "id": "f4acb53c-e3f8-4c21-bc5a-65ecb9106f27",
+        "row_idx": 43677,
+        "document": "[type=lemmas] file=l4v/proof/refine/ARM_HYP/Untyped_R.thy\nGeneral purpose of the collected lemmas (within 2 lines):\nThe lemma `corres_list_all2_mapM_` is a rewrite rule that combines the property of `corres_list_all2_mapM_'` with reflexivity of suffixes to simplify expressions involving list correspondence under monadic mapping.\n\nExplanation about how they support later proofs:\nIt enables automated simplification in proofs where list structures are transformed via monadic operations and suffix equality is known to hold, reducing the need for manual application of reflexivity and list correspondence rules.",
+        "metadata": {
+          "row_idx": 43677,
+          "score": 8.5,
+          "snippet": "lemmas corres_list_all2_mapM_\n     = corres_list_all2_mapM_' [OF suffix_refl suffix_refl]",
+          "source_file": "l4v/proof/refine/ARM_HYP/Untyped_R.thy",
+          "type": "lemmas"
+        },
+        "score": 0.7122774663075168,
+        "mode": "dense"
+      },
+      {
+        "id": "c1edcf42-ad70-44a0-9f9e-337d86e572fa",
+        "row_idx": 9045,
+        "document": "[type=lemma] file=l4v/lib/ExtraCorres.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if two lists `as` and `cs` satisfy a certain relationship defined by `S`, and if corresponding elements of these lists satisfy a relationship defined by `r'` under the function `f` and `f'`, then the monadic operations `mapM f as` and `mapM f' cs` satisfy a relationship defined by `r`.\n\nExplanation about proof:\nThe proof uses induction on the `list_all2_induct_suffixeq` rule, which allows reasoning about pairs of lists that satisfy `list_all2` and are related by a suffix relationship. The base case handles empty lists, directly applying the assumption `rn` and simplifying with definitions of `mapM` and `sequence`. For the inductive step, it assumes the property holds for the tails of the lists (`xs` and `ys`) and proves it for the lists including the heads (`x` and `y`). It constructs a correspondence (`corr'`) for the heads using the `corr` assumption and then applies the `corres_underlying_split` rule twice to combine the correspondences for the heads and tails, ensuring the overall correspondence satisfies the required conditions.",
+        "metadata": {
+          "row_idx": 9045,
+          "score": 8.5,
+          "snippet": "(* list_all2 has _much_ nicer simps than set (zip _ _).\n    See KernelInit_R: corres_init_objs for an example *)\nlemma corres_mapM_list_all2:\n  assumes rn: \"r [] []\"\n  and     rc: \"\\<And>x xs y ys. \\<lbrakk> r xs ys; r' x y \\<rbrakk> \\<Longrightarrow> r (x # xs) (y # ys)\"\n  and   corr: \"\\<And>x xs y ys. \\<lbrakk> S x y; list_all2 S xs ys \\<rbrakk>\n               \\<Longrightarrow> corres_underlying sr nf nf' r' (Q (x # xs)) (Q' (y # ys)) (f x) (f' y)\"\n  and     ha: \"\\<And>x xs y. \\<lbrakk> S x y; suffix (x#xs) as \\<rbrakk> \\<Longrightarrow> \\<lbrace>Q  (x # xs)\\<rbrace> f x \\<lbrace>\\<lambda>r. Q xs\\<rbrace>\"\n  and     hc: \"\\<And>x y ys. \\<lbrakk> S x y; suffix (y#ys) cs \\<rbrakk> \\<Longrightarrow> \\<lbrace>Q' (y # ys) \\<rbrace> f' y \\<lbrace>\\<lambda>r. Q' ys\\<rbrace>\"\n  and   lall: \"list_all2 S as cs\"\n  shows       \"corres_underlying sr nf nf' r (Q as) (Q' cs) (mapM f as) (mapM f' cs)\"\n  using lall\nproof (induct rule: list_all2_induct_suffixeq)\n  case Nil\n  thus ?case\n    unfolding mapM_def sequence_def by (auto intro: rn)\nnext\n  case  (Cons x xs y ys)\n\n  have corr': \"corres_underlying sr nf nf' r' (Q (x # xs)) (Q' (y # ys)) (f x) (f' y)\"\n  proof (rule corr)\n    show \"list_all2 S xs ys\" by (simp add: Cons)\n  qed fact+\n\n  show ?case\n    apply (simp add: mapM_Cons)\n    apply (rule corres_underlying_split [OF corr' _ ha [OF Cons(2)] hc [OF Cons(2)]])\n    apply (rule corres_underlying_split [OF Cons(3) _ hoare_TrueI hoare_TrueI])\n    apply (simp add: rc)\n    apply (rule Cons.hyps)+\n    done",
+          "source_file": "l4v/lib/ExtraCorres.thy",
+          "type": "lemma"
+        },
+        "score": 0.712170630099678,
+        "mode": "dense"
+      },
+      {
+        "id": "499028cf-0108-4ffc-85d6-2862fbec7875",
+        "row_idx": 52459,
+        "document": "[type=lemmas] file=l4v/proof/refine/RISCV64/Untyped_R.thy\nGeneral purpose of the collected lemmas (within 2 lines):\nThe lemma `corres_list_all2_mapM_` is a rewrite rule that establishes a correspondence between list-related relations and monadic mapping operations, specialized using reflexivity of the suffix relation.\n\nExplanation about how they support later proofs:\nIt simplifies proofs involving list transformations under monadic contexts by reducing complex correspondences to simpler forms, leveraging the reflexive property of suffix to eliminate redundant assumptions in inductive or relational reasoning.",
+        "metadata": {
+          "row_idx": 52459,
+          "score": 6.5,
+          "snippet": "lemmas corres_list_all2_mapM_\n     = corres_list_all2_mapM_' [OF suffix_refl suffix_refl]",
+          "source_file": "l4v/proof/refine/RISCV64/Untyped_R.thy",
+          "type": "lemmas"
+        },
+        "score": 0.7074296998414892,
+        "mode": "dense"
+      }
+    ]
+  },
+  {
+    "case": 10,
+    "input": "lemma corresK_mapM_mapM_x:\n  assumes \"corres_underlyingK sr nf nf' F r' P P' (mapM f as) (mapM f' cs)\"\n  shows \"corres_underlyingK sr nf nf' F dc P P' (mapM_x f as) (mapM_x f' cs)\"",
+    "gt": "by (rule corresK_discard_rv, rule assms)",
+    "proof": "unfolding mapM_x_mapM\nby (rule corresK_discard_rv, rule assms)",
+    "prompt": "You are an Isabelle/HOL proof assistant.\nUse the given References (explanation + snippet examples) to infer tactic/style patterns.\nProduce a concise, correct proof for the Target INPUT using standard tactics.\nReturn ONLY the proof script (no extra text).\n\n# References\n### Reference 1 (source: l4v/proof/drefine/CNode_DR.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if a function `f` corresponds under the `corres_underlying` relation with respect to `mapM_x g xs`, then it also corresponds under the same relation with respect to `mapM g xs`.\n\nExplanation about proof:\nThe proof leverages the simplification of `mapM_x_mapM` and the symmetric definition of `liftM` to establish the correspondence between `mapM_x g xs` and `mapM g xs`. By using these simplifications, the lemma demonstrates that the behavior of `f` with `mapM_x g xs` can be reduced to its behavior with `mapM g xs` under the given `corres_underlying` conditions.\n\nSNIPPET (lemma and proof):\nlemma corres_mapM_to_mapM_x:\n  \"corres_underlying sr fl fl' dc P P' f (mapM_x g xs)\n     \\<Longrightarrow> corres_underlying sr fl fl' dc P P' f (mapM g xs)\"\n  by (simp add: mapM_x_mapM liftM_def[symmetric])\n\n### Reference 2 (source: l4v/lib/CorresK/CorresK_Lemmas.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if the correspondence between two monadic actions (mapM f as) and (mapM f' cs) holds under certain conditions, then the correspondence also holds when these actions discard their return values (mapM_x f as) and (mapM_x f' cs).\n\nExplanation about proof:\nThe proof unfolds the definition of mapM_x in terms of mapM using the mapM_x_mapM lemma. It then applies the corresK_discard_rv rule, which allows discarding the return value while preserving the correspondence. Finally, it uses the assumption provided in the lemma statement to conclude the proof.\n\nSNIPPET (lemma and proof):\nlemma corresK_mapM_mapM_x:\n  assumes \"corres_underlyingK sr nf nf' F r' P P' (mapM f as) (mapM f' cs)\"\n  shows \"corres_underlyingK sr nf nf' F dc P P' (mapM_x f as) (mapM_x f' cs)\"\n  unfolding mapM_x_mapM by (rule corresK_discard_rv, rule assms)\n\n### Reference 3 (source: l4v/lib/CorresK/CorresK_Lemmas.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if certain conditions hold for functions `f` and `f'` over lists `xs` and `ys`, then `mapM f xs` corresponds to `mapM f' ys` under a given correspondence relation `R`.\n\nExplanation about proof:\nThe proof begins by unfolding the definition of `corres_underlyingK`. It then applies the `impI` and `corres_mapM` rules, leveraging the assumptions provided in the lemma. The assumptions include constraints on the relationship between elements of `xs` and `ys` (`S`), correspondence properties between `f x` and `f' y` for elements in `S`, and preservation of predicates `P` and `P'` by these functions. The proof concludes by using the `auto` tactic with simplifications involving `corres_protect_def` to verify the required conditions.\n\nSNIPPET (lemma and proof):\nlemma corresK_mapM:\n  assumes S: \"set (zip xs ys) \\<subseteq> S\"\n  assumes z: \"\\<And>x y. corres_protect ((x, y) \\<in> S) \\<Longrightarrow> corres_underlyingK R nf nf' (F x y) r' P P' (f x) (f' y)\"\n  assumes w: \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P\\<rbrace> f x \\<lbrace>\\<lambda>rv. P\\<rbrace>\"\n             \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P'\\<rbrace> f' y \\<lbrace>\\<lambda>rv. P'\\<rbrace>\"\n  shows      \"corres_underlyingK R nf nf'\n                  ((length xs = length ys) \\<and>\n                   (r [] []) \\<and> (\\<forall>x xs y ys. r xs ys \\<longrightarrow> r' x y \\<longrightarrow> r (x # xs) (y # ys)) \\<and>\n                  (\\<forall>(x,y)\\<in>S. F x y)) r P P' (mapM f xs) (mapM f' ys)\"\n  unfolding corres_underlyingK_def\n  apply (rule impI, rule corres_mapM[of r r' S])\n  using assms unfolding corres_underlyingK_def by (auto simp: corres_protect_def)\n\n### Reference 4 (source: l4v/lib/BCorres_UL.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if for all xa, the binary correspondence (bcorres_underlying) holds between the functions f and f' applied to the results of x and x' respectively, then the binary correspondence also holds when these functions are sequenced with gets operations.\n\nExplanation about proof:\nThe proof leverages the wp (weakest precondition) simplifier (wpsimp) along with the definition of the gets operation (gets_def). It demonstrates that the binary correspondence property is preserved when the functions f and f' are composed with gets operations, given that the underlying correspondence holds for all inputs.\n\nSNIPPET (lemma and proof):\nlemma gets_bcorres_underlying':\n  \"(\\<And>xa. bcorres_underlying t (f (x xa)) (f' (x' (t xa)))) \\<Longrightarrow>\n  bcorres_underlying t (gets x >>= f) (gets x' >>= f')\"\n  by (wpsimp simp: gets_def)\n\n### Reference 5 (source: l4v/proof/crefine/X64/Ipc_C.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if two functions `f` and `g` are equal for all elements in the list `xs`, then applying `mapM_x` to `f` and `g` with the same list `xs` will yield the same result.\n\nExplanation about proof:\nThe proof is conducted using induction on the list `xs`. The base case involves an empty list (`Nil`), where `mapM_x` applied to any function with an empty list results in a monadic value representing success without any computation (`mapM_x_Nil`). For the inductive step (`Cons`), it assumes the property holds for a list `ys` and shows that it also holds when an element `x` is added to the front of the list. The simplification rules `mapM_x_Nil` and `mapM_x_Cons` are used to break down and simplify the expressions at each step of the induction.\n\nSNIPPET (lemma and proof):\nlemma mapM_cong: \"\\<lbrakk> \\<forall>x. elem x xs \\<longrightarrow> f x = g x \\<rbrakk> \\<Longrightarrow> mapM_x f xs =  mapM_x g xs\"\n  by (induction xs, (simp add: mapM_x_Nil mapM_x_Cons)+)\n\n### Target:\nINPUT (lemma to prove):\nlemma corresK_mapM_mapM_x:\n  assumes \"corres_underlyingK sr nf nf' F r' P P' (mapM f as) (mapM f' cs)\"\n  shows \"corres_underlyingK sr nf nf' F dc P P' (mapM_x f as) (mapM_x f' cs)\"\n\nREQUIRED OUTPUT:\n- ONLY the Isabelle proof script that closes this lemma.\n- Do not echo the lemma. No commentary. Proof script only.\n",
+    "explanation": "\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if two computations are related under a certain correspondence, then the corresponding computations that accumulate results (mapM_x) are also related under the same correspondence.\n\nExplanation about proof:\nThe proof utilizes the assumption that the computations mapM f as and mapM f' cs are related under the correspondence corres_underlyingK. It then demonstrates that the accumulation of results through mapM_x f as and mapM_x f' cs maintains this correspondence, leveraging properties of the mapM and the structure of the computations involved.\n",
+    "hits": [
+      {
+        "id": "c1a7e2c3-39bc-4417-9f49-6ac6eb4b7e8d",
+        "row_idx": 4758,
+        "document": "[type=lemma] file=l4v/proof/drefine/CNode_DR.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if a function `f` corresponds under the `corres_underlying` relation with respect to `mapM_x g xs`, then it also corresponds under the same relation with respect to `mapM g xs`.\n\nExplanation about proof:\nThe proof leverages the simplification of `mapM_x_mapM` and the symmetric definition of `liftM` to establish the correspondence between `mapM_x g xs` and `mapM g xs`. By using these simplifications, the lemma demonstrates that the behavior of `f` with `mapM_x g xs` can be reduced to its behavior with `mapM g xs` under the given `corres_underlying` conditions.",
+        "metadata": {
+          "row_idx": 4758,
+          "score": 9.5,
+          "snippet": "lemma corres_mapM_to_mapM_x:\n  \"corres_underlying sr fl fl' dc P P' f (mapM_x g xs)\n     \\<Longrightarrow> corres_underlying sr fl fl' dc P P' f (mapM g xs)\"\n  by (simp add: mapM_x_mapM liftM_def[symmetric])",
+          "source_file": "l4v/proof/drefine/CNode_DR.thy",
+          "type": "lemma"
+        },
+        "score": 0.648282577547926,
+        "mode": "dense"
+      },
+      {
+        "id": "176fa022-4133-485f-a08c-6c3af8f8976b",
+        "row_idx": 77137,
+        "document": "[type=lemma] file=l4v/lib/CorresK/CorresK_Lemmas.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if the correspondence between two monadic actions (mapM f as) and (mapM f' cs) holds under certain conditions, then the correspondence also holds when these actions discard their return values (mapM_x f as) and (mapM_x f' cs).\n\nExplanation about proof:\nThe proof unfolds the definition of mapM_x in terms of mapM using the mapM_x_mapM lemma. It then applies the corresK_discard_rv rule, which allows discarding the return value while preserving the correspondence. Finally, it uses the assumption provided in the lemma statement to conclude the proof.",
+        "metadata": {
+          "row_idx": 77137,
+          "score": 9.5,
+          "snippet": "lemma corresK_mapM_mapM_x:\n  assumes \"corres_underlyingK sr nf nf' F r' P P' (mapM f as) (mapM f' cs)\"\n  shows \"corres_underlyingK sr nf nf' F dc P P' (mapM_x f as) (mapM_x f' cs)\"\n  unfolding mapM_x_mapM by (rule corresK_discard_rv, rule assms)",
+          "source_file": "l4v/lib/CorresK/CorresK_Lemmas.thy",
+          "type": "lemma"
+        },
+        "score": 0.6343569134088061,
+        "mode": "dense"
+      },
+      {
+        "id": "4234c403-10ac-4e41-86f3-316da331ab29",
+        "row_idx": 76970,
+        "document": "[type=lemma] file=l4v/lib/CorresK/CorresK_Lemmas.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if certain conditions hold for functions `f` and `f'` over lists `xs` and `ys`, then `mapM f xs` corresponds to `mapM f' ys` under a given correspondence relation `R`.\n\nExplanation about proof:\nThe proof begins by unfolding the definition of `corres_underlyingK`. It then applies the `impI` and `corres_mapM` rules, leveraging the assumptions provided in the lemma. The assumptions include constraints on the relationship between elements of `xs` and `ys` (`S`), correspondence properties between `f x` and `f' y` for elements in `S`, and preservation of predicates `P` and `P'` by these functions. The proof concludes by using the `auto` tactic with simplifications involving `corres_protect_def` to verify the required conditions.",
+        "metadata": {
+          "row_idx": 76970,
+          "score": 8.5,
+          "snippet": "lemma corresK_mapM:\n  assumes S: \"set (zip xs ys) \\<subseteq> S\"\n  assumes z: \"\\<And>x y. corres_protect ((x, y) \\<in> S) \\<Longrightarrow> corres_underlyingK R nf nf' (F x y) r' P P' (f x) (f' y)\"\n  assumes w: \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P\\<rbrace> f x \\<lbrace>\\<lambda>rv. P\\<rbrace>\"\n             \"\\<And>x y. (x, y) \\<in> S \\<Longrightarrow> \\<lbrace>P'\\<rbrace> f' y \\<lbrace>\\<lambda>rv. P'\\<rbrace>\"\n  shows      \"corres_underlyingK R nf nf'\n                  ((length xs = length ys) \\<and>\n                   (r [] []) \\<and> (\\<forall>x xs y ys. r xs ys \\<longrightarrow> r' x y \\<longrightarrow> r (x # xs) (y # ys)) \\<and>\n                  (\\<forall>(x,y)\\<in>S. F x y)) r P P' (mapM f xs) (mapM f' ys)\"\n  unfolding corres_underlyingK_def\n  apply (rule impI, rule corres_mapM[of r r' S])\n  using assms unfolding corres_underlyingK_def by (auto simp: corres_protect_def)",
+          "source_file": "l4v/lib/CorresK/CorresK_Lemmas.thy",
+          "type": "lemma"
+        },
+        "score": 0.629095107253954,
+        "mode": "dense"
+      },
+      {
+        "id": "d907f3c2-f2b9-432f-91d0-51185989e397",
+        "row_idx": 12365,
+        "document": "[type=lemma] file=l4v/lib/BCorres_UL.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if for all xa, the binary correspondence (bcorres_underlying) holds between the functions f and f' applied to the results of x and x' respectively, then the binary correspondence also holds when these functions are sequenced with gets operations.\n\nExplanation about proof:\nThe proof leverages the wp (weakest precondition) simplifier (wpsimp) along with the definition of the gets operation (gets_def). It demonstrates that the binary correspondence property is preserved when the functions f and f' are composed with gets operations, given that the underlying correspondence holds for all inputs.",
+        "metadata": {
+          "row_idx": 12365,
+          "score": 9.5,
+          "snippet": "lemma gets_bcorres_underlying':\n  \"(\\<And>xa. bcorres_underlying t (f (x xa)) (f' (x' (t xa)))) \\<Longrightarrow>\n  bcorres_underlying t (gets x >>= f) (gets x' >>= f')\"\n  by (wpsimp simp: gets_def)",
+          "source_file": "l4v/lib/BCorres_UL.thy",
+          "type": "lemma"
+        },
+        "score": 0.6199789859503418,
+        "mode": "dense"
+      },
+      {
+        "id": "39f7da71-8eea-4ad0-9b4f-91f073fce50e",
+        "row_idx": 4161,
+        "document": "[type=lemma] file=l4v/proof/crefine/X64/Ipc_C.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if two functions `f` and `g` are equal for all elements in the list `xs`, then applying `mapM_x` to `f` and `g` with the same list `xs` will yield the same result.\n\nExplanation about proof:\nThe proof is conducted using induction on the list `xs`. The base case involves an empty list (`Nil`), where `mapM_x` applied to any function with an empty list results in a monadic value representing success without any computation (`mapM_x_Nil`). For the inductive step (`Cons`), it assumes the property holds for a list `ys` and shows that it also holds when an element `x` is added to the front of the list. The simplification rules `mapM_x_Nil` and `mapM_x_Cons` are used to break down and simplify the expressions at each step of the induction.",
+        "metadata": {
+          "row_idx": 4161,
+          "score": 9.5,
+          "snippet": "lemma mapM_cong: \"\\<lbrakk> \\<forall>x. elem x xs \\<longrightarrow> f x = g x \\<rbrakk> \\<Longrightarrow> mapM_x f xs =  mapM_x g xs\"\n  by (induction xs, (simp add: mapM_x_Nil mapM_x_Cons)+)",
+          "source_file": "l4v/proof/crefine/X64/Ipc_C.thy",
+          "type": "lemma"
+        },
+        "score": 0.6163191208405607,
+        "mode": "dense"
+      }
+    ]
+  },
+  {
+    "case": 11,
+    "input": "lemma corresK_subst_both: \"g' = f' \\<Longrightarrow> g = f \\<Longrightarrow>\n  corres_underlyingK sr nf nf' F r P P' f f' \\<Longrightarrow>",
+    "gt": "by simp",
+    "proof": "by simp",
+    "prompt": "You are an Isabelle/HOL proof assistant.\nUse the given References (explanation + snippet examples) to infer tactic/style patterns.\nProduce a concise, correct proof for the Target INPUT using standard tactics.\nReturn ONLY the proof script (no extra text).\n\n# References\n### Reference 1 (source: l4v/lib/CorresK/CorresK_Lemmas.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if a certain condition \\( F \\) implies a correspondence relation between functions \\( f \\) and \\( g \\) under specific conditions, then the correspondence relation holds regardless of whether \\( F \\) is true or not.\n\nExplanation about proof:\nThe proof uses the simplification method (`simp`) with the definition of `corres_underlyingK` to demonstrate that the antecedent and consequent of the implication are identical, thus trivially proving the lemma.\n\nSNIPPET (lemma and proof):\nlemma corresK_use_guard:\n  \"(F \\<Longrightarrow> corres_underlyingK sr nf nf' F r Q Q' f g) \\<Longrightarrow> corres_underlyingK sr nf nf' F r Q Q' f g\"\n  by (simp add: corres_underlyingK_def)\n\n### Reference 2 (source: l4v/lib/CorresK/CorresK_Lemmas.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if two functions `g` and `f`, as well as their corresponding functions `g'` and `f'`, are equal, then the correspondence relation `corres_underlyingK` holds for both pairs of functions under the same conditions.\n\nExplanation about proof:\nThe proof uses the `simp` method, which simplifies the goal using rewrite rules. Given the assumptions `g' = f'` and `g = f`, and the fact that `corres_underlyingK sr nf nf' F r P P' f f'` holds, the `simp` method can directly substitute `g` with `f` and `g'` with `f'` in the conclusion, showing that `corres_underlyingK sr nf nf' F r P P' g g'` also holds.\n\nSNIPPET (lemma and proof):\nlemma corresK_subst_both: \"g' = f' \\<Longrightarrow> g = f \\<Longrightarrow>\n  corres_underlyingK sr nf nf' F r P P' f f' \\<Longrightarrow>\n  corres_underlyingK sr nf nf' F r P P' g g'\" by simp\n\n### Reference 3 (source: l4v/lib/CorresK_Method.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nIf two functions `g` and `f` are equal, and a correspondence relation holds for `f` and another function `f'`, then the same correspondence relation holds for `g` and `f'`.\n\nExplanation about proof:\nThe proof leverages the equality of functions `g` and `f` to substitute `g` with `f` in the given correspondence relation `corres_underlyingK sr nf nf' F r P P' f f'`. The `simp` method simplifies the expression by applying this substitution, thereby proving the lemma.\n\nSNIPPET (lemma and proof):\nlemma corresK_subst_left: \"g = f \\<Longrightarrow>\n  corres_underlyingK sr nf nf' F r P P' f f' \\<Longrightarrow>\n  corres_underlyingK sr nf nf' F r P P' g f'\" by simp\n\n### Reference 4 (source: l4v/lib/CorresK_Method.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nIf two functions `f'` and `g'` are equal, then substituting `g'` for `f'` in the `corres_underlyingK` relation preserves the relation.\n\nExplanation about proof:\nThe proof uses the `simp` method, which simplifies the goal using rewrite rules. Given that `g'` is equal to `f'`, the equality substitution rule replaces `f'` with `g'` in the `corres_underlyingK` relation, showing that the relation holds for `g'` as well.\n\nSNIPPET (lemma and proof):\nlemma corresK_subst_right: \"g' = f' \\<Longrightarrow>\n  corres_underlyingK sr nf nf' F r P P' f f' \\<Longrightarrow>\n  corres_underlyingK sr nf nf' F r P P' f g'\" by simp\n\n### Reference 5 (source: l4v/lib/Corres_UL.thy):\nEXPLANATION:\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if two functions `f` and `f'` are equal, and two functions `g` and `g'` are equal, then the `corres_underlying` relation between these functions remains unchanged.\n\nExplanation about proof:\nThe proof uses the `simp` method with the provided assumptions (`f = f'` and `g = g'`) and applies the `corres_cong` congruence rule to show that the equality of the functions preserves the `corres_underlying` relation.\n\nSNIPPET (lemma and proof):\n(* Even more restrictive: only rewrite monads, no additional context. Occasionally useful *)\nlemma corres_weaker_cong:\n  assumes \"f = f'\"\n  assumes \"g = g'\"\n  shows   \"corres_underlying sr nf nf' r P Q f g = corres_underlying sr nf nf' r P Q f' g'\"\n  by (simp add: assms cong: corres_cong)\n\n### Target:\nINPUT (lemma to prove):\nlemma corresK_subst_both: \"g' = f' \\<Longrightarrow> g = f \\<Longrightarrow>\n  corres_underlyingK sr nf nf' F r P P' f f' \\<Longrightarrow>\n\nREQUIRED OUTPUT:\n- ONLY the Isabelle proof script that closes this lemma.\n- Do not echo the lemma. No commentary. Proof script only.\n",
+    "explanation": "\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if two pairs of functions are equal and a correspondence holds under certain conditions, then the correspondence remains valid when substituting these functions.\n\nExplanation about proof:\nThe proof involves demonstrating that the equality of the functions \\(g'\\) and \\(f'\\) along with \\(g\\) and \\(f\\) allows us to maintain the correspondence \\(corres_underlyingK\\) under the specified relations and predicates. By leveraging the assumptions of equality and the properties of the correspondence relation, we can conclude that the conditions for \\(corres_underlyingK\\) still hold after the substitutions.\n",
+    "hits": [
+      {
+        "id": "5ccb83f7-1c41-429c-9a1f-2b23f2123e11",
+        "row_idx": 76914,
+        "document": "[type=lemma] file=l4v/lib/CorresK/CorresK_Lemmas.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if a certain condition \\( F \\) implies a correspondence relation between functions \\( f \\) and \\( g \\) under specific conditions, then the correspondence relation holds regardless of whether \\( F \\) is true or not.\n\nExplanation about proof:\nThe proof uses the simplification method (`simp`) with the definition of `corres_underlyingK` to demonstrate that the antecedent and consequent of the implication are identical, thus trivially proving the lemma.",
+        "metadata": {
+          "row_idx": 76914,
+          "score": 8.5,
+          "snippet": "lemma corresK_use_guard:\n  \"(F \\<Longrightarrow> corres_underlyingK sr nf nf' F r Q Q' f g) \\<Longrightarrow> corres_underlyingK sr nf nf' F r Q Q' f g\"\n  by (simp add: corres_underlyingK_def)",
+          "source_file": "l4v/lib/CorresK/CorresK_Lemmas.thy",
+          "type": "lemma"
+        },
+        "score": 0.7423053893632994,
+        "mode": "dense"
+      },
+      {
+        "id": "c160d272-0a95-4fa0-86b9-f30bff3772c2",
+        "row_idx": 77161,
+        "document": "[type=lemma] file=l4v/lib/CorresK/CorresK_Lemmas.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to show that if two functions `g` and `f`, as well as their corresponding functions `g'` and `f'`, are equal, then the correspondence relation `corres_underlyingK` holds for both pairs of functions under the same conditions.\n\nExplanation about proof:\nThe proof uses the `simp` method, which simplifies the goal using rewrite rules. Given the assumptions `g' = f'` and `g = f`, and the fact that `corres_underlyingK sr nf nf' F r P P' f f'` holds, the `simp` method can directly substitute `g` with `f` and `g'` with `f'` in the conclusion, showing that `corres_underlyingK sr nf nf' F r P P' g g'` also holds.",
+        "metadata": {
+          "row_idx": 77161,
+          "score": 9.5,
+          "snippet": "lemma corresK_subst_both: \"g' = f' \\<Longrightarrow> g = f \\<Longrightarrow>\n  corres_underlyingK sr nf nf' F r P P' f f' \\<Longrightarrow>\n  corres_underlyingK sr nf nf' F r P P' g g'\" by simp",
+          "source_file": "l4v/lib/CorresK/CorresK_Lemmas.thy",
+          "type": "lemma"
+        },
+        "score": 0.6880836172627732,
+        "mode": "dense"
+      },
+      {
+        "id": "ee1dd106-01c1-46b4-b0c5-4274c6b5ea56",
+        "row_idx": 78126,
+        "document": "[type=lemma] file=l4v/lib/CorresK_Method.thy\nGoal that the lemma aims to prove (within 2 lines):\nIf two functions `g` and `f` are equal, and a correspondence relation holds for `f` and another function `f'`, then the same correspondence relation holds for `g` and `f'`.\n\nExplanation about proof:\nThe proof leverages the equality of functions `g` and `f` to substitute `g` with `f` in the given correspondence relation `corres_underlyingK sr nf nf' F r P P' f f'`. The `simp` method simplifies the expression by applying this substitution, thereby proving the lemma.",
+        "metadata": {
+          "row_idx": 78126,
+          "score": 9.5,
+          "snippet": "lemma corresK_subst_left: \"g = f \\<Longrightarrow>\n  corres_underlyingK sr nf nf' F r P P' f f' \\<Longrightarrow>\n  corres_underlyingK sr nf nf' F r P P' g f'\" by simp",
+          "source_file": "l4v/lib/CorresK_Method.thy",
+          "type": "lemma"
+        },
+        "score": 0.6658800463716752,
+        "mode": "dense"
+      },
+      {
+        "id": "9ff3d570-da0f-449e-a559-7bf59552968f",
+        "row_idx": 78132,
+        "document": "[type=lemma] file=l4v/lib/CorresK_Method.thy\nGoal that the lemma aims to prove (within 2 lines):\nIf two functions `f'` and `g'` are equal, then substituting `g'` for `f'` in the `corres_underlyingK` relation preserves the relation.\n\nExplanation about proof:\nThe proof uses the `simp` method, which simplifies the goal using rewrite rules. Given that `g'` is equal to `f'`, the equality substitution rule replaces `f'` with `g'` in the `corres_underlyingK` relation, showing that the relation holds for `g'` as well.",
+        "metadata": {
+          "row_idx": 78132,
+          "score": 9.5,
+          "snippet": "lemma corresK_subst_right: \"g' = f' \\<Longrightarrow>\n  corres_underlyingK sr nf nf' F r P P' f f' \\<Longrightarrow>\n  corres_underlyingK sr nf nf' F r P P' f g'\" by simp",
+          "source_file": "l4v/lib/CorresK_Method.thy",
+          "type": "lemma"
+        },
+        "score": 0.6610355323005099,
+        "mode": "dense"
+      },
+      {
+        "id": "17c5eedb-4275-4538-95d4-4c055f62fe5e",
+        "row_idx": 79233,
+        "document": "[type=lemma] file=l4v/lib/Corres_UL.thy\nGoal that the lemma aims to prove (within 2 lines):\nThe lemma aims to prove that if two functions `f` and `f'` are equal, and two functions `g` and `g'` are equal, then the `corres_underlying` relation between these functions remains unchanged.\n\nExplanation about proof:\nThe proof uses the `simp` method with the provided assumptions (`f = f'` and `g = g'`) and applies the `corres_cong` congruence rule to show that the equality of the functions preserves the `corres_underlying` relation.",
+        "metadata": {
+          "row_idx": 79233,
+          "score": 9.5,
+          "snippet": "(* Even more restrictive: only rewrite monads, no additional context. Occasionally useful *)\nlemma corres_weaker_cong:\n  assumes \"f = f'\"\n  assumes \"g = g'\"\n  shows   \"corres_underlying sr nf nf' r P Q f g = corres_underlying sr nf nf' r P Q f' g'\"\n  by (simp add: assms cong: corres_cong)",
+          "source_file": "l4v/lib/Corres_UL.thy",
+          "type": "lemma"
+        },
+        "score": 0.6322142653089917,
+        "mode": "dense"
+      }
+    ]
+  }
+]

@@ -19,6 +19,12 @@ This script provides a simple pipeline to:
 }
 ```
 
+## Backend
+```
+--backend openai → use OpenAI API (openai_key from api_key.json)
+--backend vllm → use a local vLLM server (vllm_url from api_key.json)
+```
+
 ## Setup
 1. unzip 'data.tar.gz'
 ```
@@ -35,11 +41,6 @@ pip install -r requirements.txt
 python3 run.py --jsonl data/isabelle_judge.jsonl
 ```
 
-## Backend
-```
---backend openai → use OpenAI API (openai_key from api_key.json)
---backend vllm → use a local vLLM server (vllm_url from api_key.json)
-```
 ## Usage
 
 ### 1. Retrieval

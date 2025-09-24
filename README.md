@@ -26,17 +26,17 @@ This script provides a simple pipeline to:
 ```
 
 ## Setup
-1. unzip 'data.tar.gz'
+### 1. unzip 'data.tar.gz'
 ```
 tar -zxvf data.tar.gz
 ```
 
-2. Install dependency
+### 2. Install dependency
 ```
 pip install -r requirements.txt
 ```
 
-3. Build ChromaDB
+### 3. Build ChromaDB
 ```
 python3 run.py --jsonl data/isabelle_judge.jsonl
 ```

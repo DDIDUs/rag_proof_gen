@@ -1,0 +1,4 @@
+{
+    "openai_key": "sk-xxxxxx",
+    "vllm_url": "http://localhost:8000/v1"
+}

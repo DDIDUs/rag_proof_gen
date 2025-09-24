@@ -19,7 +19,7 @@ This script provides a simple pipeline to:
 }
 ```
 
-##Setup
+## Setup
 1. unzip 'data.tar.gz'
 ```
 tar -zxvf data.tar.gz
@@ -35,16 +35,16 @@ pip install -r requirements.txt
 python3 run.py --jsonl data/isabelle_judge.jsonl
 ```
 
-##Backend
+## Backend
 
 --backend openai → use OpenAI API (openai_key from api_key.json)
 --backend vllm → use a local vLLM server (vllm_url from api_key.json)
 
-##Usage
+## Usage
 
 1. Retrieval
 
-###OpenAI
+### OpenAI
 ```python
 python3 run.py retrieval \
     --test-jsonl test_data/lemmas_short.jsonl \
@@ -52,9 +52,27 @@ python3 run.py retrieval \
     --out result/results_openai.json
 ```
 
-###VLLM
+### VLLM
 ```python
 python3 run.py retrieval \
+    --test-jsonl test_data/lemmas_short.jsonl \
+    --gen --backend vllm \
+    --out result/results_vllm.json
+```
+
+1. Search
+
+### OpenAI
+```python
+python3 run.py search \
+    --test-jsonl test_data/lemmas_short.jsonl \
+    --gen --backend openai \
+    --out result/results_openai.json
+```
+
+### VLLM
+```python
+python3 run.py search \
     --test-jsonl test_data/lemmas_short.jsonl \
     --gen --backend vllm \
     --out result/results_vllm.json

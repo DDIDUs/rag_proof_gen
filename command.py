@@ -66,14 +66,8 @@ def _explain_to_query(input_text: str, backend: str, model: str, temp: float) ->
     prompt = build_explanation_prompt_for_input(input_text)
     gen = LemmaGenerator(backend=backend, model=model, temperature=temp)
     out = gen.generate(prompt) or ""
-
-    # 코드펜스 제거
-    out = re.sub(r"```.*?```", "", out, flags=re.S)
-    # 섹션 추출
-    m = re.search(r"Explanation about proof:\s*(.*)", out, flags=re.S|re.I)
-    query = m.group(1).strip() if m else out.strip()
-
-    return query if len(query) >= 5 else input_text
+    m = re.search(r"```(.*?)```", out, flags=re.S)
+    return m.group(1) if m else input_text
 
 # --------- 커맨드 ---------
 def cmd_index(args):

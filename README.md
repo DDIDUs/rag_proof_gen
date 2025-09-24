@@ -38,7 +38,7 @@ pip install -r requirements.txt
 
 ### 3. Build ChromaDB
 ```
-python3 run.py indexing --jsonl data/isabelle_judge.jsonl
+python3 run.py index --jsonl data/isabelle_judge.jsonl
 ```
 
 ## Usage

@@ -78,3 +78,15 @@ python3 run.py search \
     --gen --backend vllm \
     --out result/results_vllm.json
 ```
+
+### 3. Evaluation
+```python
+export PATH="../l4v/isabelle/bin:$PATH"                                     # isabelle 경로
+
+python3 eval.py \
+      --jsonl ../example.json \        # proof 경로
+      --thy ../l4v/lib/CorresK/CorresK_Lemmas.thy \    # .thy 파일 경로
+      --session CorresK \                           
+      --root ../l4v/ \                                 # l4v 레포지토리 경로
+      --out ../result/build_report.jsonl      # output 경로
+```

@@ -76,12 +76,13 @@ python3 run.py search \
 python3 run.py search \
     --test-jsonl test_data/lemmas_short.jsonl \
     --gen --backend vllm \
+    --model Qwen/Qwen2.5-Coder-7B-Instruct        # 사용 모델 이름
     --out result/results_vllm.json
 ```
 
 ### 3. Evaluation
 ```python
-export PATH="../l4v/isabelle/bin:$PATH"                                     # isabelle 경로
+export PATH="../l4v/isabelle/bin:$PATH"           # isabelle 경로
 
 python3 eval.py \
       --jsonl ../example.json \        # proof 경로

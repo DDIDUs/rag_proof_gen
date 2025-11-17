@@ -58,6 +58,7 @@ python3 run.py retrieval \
 python3 run.py retrieval \
     --test-jsonl test_data/lemmas_short.jsonl \
     --gen --backend vllm \
+    --model Qwen/Qwen2.5-Coder-7B-Instruct \ 
     --out result/results_vllm.json
 ```
 
@@ -76,7 +77,7 @@ python3 run.py search \
 python3 run.py search \
     --test-jsonl test_data/lemmas_short.jsonl \
     --gen --backend vllm \
-    --model Qwen/Qwen2.5-Coder-7B-Instruct        # 사용 모델 이름
+    --model Qwen/Qwen2.5-Coder-7B-Instruct     \   # 사용 모델 이름
     --out result/results_vllm.json
 ```
 

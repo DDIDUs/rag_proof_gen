@@ -110,20 +110,22 @@ def cmd_search(args):
     if args.test_jsonl:
         for idx, (q, gt) in enumerate(_iter_test_inputs(args.test_jsonl), 1):
             hits = search_hybrid(q, final_n=max(args.k, args.final_n))
-            proof = _maybe_generate(args, q, hits)
+            proof, prompt = _maybe_generate(args, q, hits)
             results.append({
                 "case": idx,
                 "input": q,
                 "gt": gt,
                 "proof": proof,
+                "prompt": prompt,
                 "hits": hits[:args.k],
             })
     else:
         hits = search_hybrid(args.query, final_n=max(args.k, args.final_n))
-        proof = _maybe_generate(args, args.query, hits)
+        proof, prompt = _maybe_generate(args, args.query, hits)
         results.append({
             "input": args.query,
             "proof": proof,
+            "prompt": prompt,
             "hits": hits[:args.k],
         })
 

@@ -14,7 +14,7 @@ from typing import Iterable, Tuple, Optional
 CODE_FENCE_RE = re.compile(r"```isabelle\s*(.*?)```", re.S)
 LEMMA_NAME_RE = re.compile(r"\blemma\s+([A-Za-z0-9_']+)")
 # Matches from "lemma <name>" up to next "lemma <something>" OR "end" at start of line.
-LEMMA_BLOCK_RE_TMPL = r"(?s)(^|\n)(lemma\s+{name}\b.*?)(?=\nlemma\s|\nend\s*$)"
+LEMMA_BLOCK_RE_TMPL = r"(?s)(^|\n)(lemma\s+{name}\b.*?)(?=\n\s*\n[^\n]|\n\s*end\s*$)"
 
 # -------- Progress utilities --------
 class Progress:
